@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Operations Mudlog</title>
+<style>
+:root{--bg:#0b0f13;--panel:#141a1f;--ink:#d9e1e4;--mute:#7c8a90;--line:#232c33;--alarm:#ff4d5e;--sel:#f3d27a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+header a{color:var(--mute);margin-left:auto}
+button,select{background:#1d252b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 9px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--mute)}
+label{color:var(--mute);display:flex;gap:4px;align-items:center}
+main{display:grid;grid-template-columns:340px minmax(0,1fr) 260px;gap:12px;padding:12px 16px;height:calc(100vh - 52px)}
+@media(max-width:900px){main{grid-template-columns:1fr;height:auto}#stage{height:75vh}#evcard{height:40vh}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:0}
+.card h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);display:flex;justify-content:space-between;align-items:center}
+#evcard{display:flex;flex-direction:column}
+#evwrap{overflow:auto;flex:1}
+table{width:100%;border-collapse:collapse;font-size:12px}
+#evwrap td{padding:3px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+#evwrap td:first-child{font-family:ui-monospace,monospace;color:var(--mute)}
+#evwrap td:nth-child(2){color:var(--mute);white-space:nowrap}
+#events tr{cursor:pointer}#events tr:hover{background:#1b2329}
+#events tr.alarm td:last-child{color:var(--alarm)}
+#events tr.sel{background:rgba(243,210,122,.14)}
+#events.ao tr:not(.alarm){display:none}
+#stage{min-height:0}
+#mud{width:100%;height:100%;display:block;touch-action:none;cursor:row-resize}
+aside{display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
+aside>*{flex-shrink:0}
+.rate{display:grid;grid-template-columns:1fr 46px;align-items:center;column-gap:8px;margin:2px 0 8px;color:var(--ink);font-size:13px}
+.rate input{grid-column:1/-1;width:100%;margin:2px 0 0}
+.rate b{grid-row:1;grid-column:2;text-align:right;font:12px ui-monospace,monospace;color:var(--mute)}
+.rate i{grid-column:1/-1;font-size:11px;color:var(--mute);font-style:normal;min-height:1em}
+aside button{font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+#clock{font:600 22px ui-monospace,monospace}
+#telem{font-size:12px;color:var(--sel);min-height:1em}
+#log{max-height:90px;overflow:auto;font-size:12px;color:var(--mute);margin:4px 0 0;padding-left:18px}
+#vals td{padding:2px 0}#vals td:not(:first-child){text-align:right;font-family:ui-monospace,monospace}
+small{color:var(--mute)}
+dialog{max-width:520px;width:calc(100% - 32px);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h2{margin:0 0 10px;font-size:20px}dialog p{margin:0 0 10px;color:#b9c4c8}dialog ul{margin:0 0 12px;padding-left:20px;color:#b9c4c8}
+dialog .row{justify-content:flex-end;margin-top:14px}
+.pulse{animation:pulse 1.2s ease-in-out 4;border-color:var(--sel)!important}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(243,210,122,.35)}}
+</style>
+</head>
+<body>
+<header>
+  <button id="play">▶ Start</button>
+  <button id="restart" title="Re-run the day with the same seed and injected events">↺ Replay day</button>
+  <label>Speed <select id="speed"><option>1</option><option>10</option><option selected>60</option><option>300</option></select>×</label>
+  <label>Bin <select id="bin"><option>1</option><option selected>3</option><option>5</option><option>15</option></select>min</label>
+  <button id="audioBtn">🔈 Enable sound</button>
+  <label>Vol <input type="range" id="vol" min="0" max="1" step="0.01" value="0.6" style="width:80px"></label>
+  <a href="spiral.html">Spiral view →</a>
+</header>
+<main>
+  <div class="card" id="evcard">
+    <h3>Events <label><input type="checkbox" id="alarmsOnly">alarms only</label></h3>
+    <div id="evwrap"><table><tbody id="events"></tbody></table></div>
+  </div>
+  <div id="stage"><canvas id="mud"></canvas></div>
+  <aside>
+    <div class="card"><h3>Status</h3><div id="clock">08:00</div><div id="harm" style="font-size:12px;color:var(--mute)"></div><div id="telem"></div><ol id="log"></ol></div>
+    <div class="card"><h3>Inject</h3>
+      <div class="row">
+        <button data-a="stop">Stoppage 10m</button><button data-a="qa">QA reject spike</button>
+        <button data-a="truck">Delay pickup 30m</button><button data-a="drop">Drop telemetry</button><select id="dropKey"></select>
+      </div>
+    </div>
+    <div class="card"><h3>Rates <label><input type="checkbox" id="homeo" checked>homeostasis</label></h3><div id="rates"></div></div>
+    <div class="card"><h3>Inspect <button id="live">Live</button></h3>
+      <table id="vals"></table>
+      <button id="replaySel" style="margin-top:6px">▶ Replay sound from here (15 min in 15 s)</button>
+    </div>
+    <small>Newest at top, history flows down; all threads share one time grid. Width = measured value on a fixed linear scale (rates: per-minute average over the bin; stocks: max in bin). Hairline = measured zero; dashed = telemetry missing. Red dots = alarm events counted in the bin (QA thread: rejects). Thread colour is identity only.</small>
+  </aside>
+</main>
+<dialog id="intro">
+  <h2>Hear and see how the factory is running</h2>
+  <p>This is a simulated factory day: materials arrive, three assembly lines build products, QA inspects them, and trucks collect them from the warehouse.</p>
+  <p>Rather than reading numbers, let your built-in pattern recognition do the work. After a while you'll learn what a normal day looks and sounds like, and notice when something changes.</p>
+  <ul>
+    <li><b>Listen:</b> roughly harmonious, flowing music means things are fine. Discordant, off-key or off-beat sound means something isn't quite right.</li>
+    <li><b>Look:</b> each coloured thread is one measurement; wider means more. Newest is at the top. Red dots are alarms.</li>
+    <li><b>Explore:</b> inject faults or change rates on the right, and toggle homeostasis to see whether the factory recovers on its own.</li>
+  </ul>
+  <p>Sound is off until you turn it on with <b>🔈 Enable sound</b> in the top bar. Headphones or speakers help; the sound is panned left to right along the flow.</p>
+  <div class="row"><button id="introSound">🔈 Enable sound &amp; start</button><button id="introClose">Close</button></div>
+</dialog>
+<script src="core.js"></script>
+<script>
+const TH=[ // fixed calibration per thread; alarm counts come from sample.alarms[k]
+  {k:"materialsIn",lab:"Materials",u:"units/min",max:40,rate:1,c:'#2ee6b0'},
+  {k:'produced',lab:'Production',u:'units/min',max:16,rate:1,c:'#4a86ff'},
+  {k:'qaInspected',lab:'QA',u:'inspected/min',max:16,rate:1,c:'#4fd16e'},
+  {k:'warehouse',lab:'Warehouse',u:'stock units',max:400,rate:0,c:'#ffb020'},
+  {k:'trucksWaiting',lab:'Logistics',u:'trucks parked',max:12,rate:0,c:'#a46bff'}];
+let binMin=3,curBins=[],selMin=null,geo,hlKey='';
+
+function bins(){
+  const out=[];
+  for(let i=0;(i+1)*binMin<=mins.length;i++){
+    const ms=mins.slice(i*binMin,(i+1)*binMin),o={i,m:i*binMin,v:{},ok:{},al:{},lines:[0,1,2].map(l=>ms.reduce((s,x)=>s+x.lines[l],0))};
+    TH.forEach(t=>{
+      o.ok[t.k]=ms.every(x=>x.valid[t.k]);
+      o.v[t.k]=t.rate?ms.reduce((s,x)=>s+x[t.k],0)/binMin:Math.max(...ms.map(x=>x[t.k]));
+      o.al[t.k]=ms.reduce((s,x)=>s+(t.k!=='qaInspected'||x.valid.qaRejected?x.alarms[t.k]:0),0);
+    });
+    out.push(o);
+  }
+  return out;
+}
+function draw(){
+  dirty=false;const c=$('mud'),dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;
+  if(c.width!==Math.round(W*dpr)||c.height!==Math.round(H*dpr)){c.width=Math.round(W*dpr);c.height=Math.round(H*dpr)}
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  curBins=bins();
+  const nb=curBins.length,top=44,gut=44,rowH=(H-top-8)/(DAY/binMin),colW=(W-gut)/TH.length,Y=i=>top+(nb-1-i+.5)*rowH;
+  geo={top,rowH,nb};
+  g.textAlign='center';g.textBaseline='alphabetic';
+  TH.forEach((t,j)=>{const x=gut+colW*(j+.5);g.fillStyle=t.c;g.font='600 12px system-ui';g.fillText(t.lab,x,16);g.fillStyle='#7c8a90';g.font='10px system-ui';g.fillText(t.u,x,30)});
+  g.textAlign='right';g.textBaseline='middle';g.strokeStyle='#232c33';g.setLineDash([3,4]);
+  for(let h=0;h<=10;h++){const ih=h*60/binMin;if(ih>nb)break;const y=top+(nb-ih)*rowH;
+    g.beginPath();g.moveTo(gut,y);g.lineTo(W,y);g.stroke();g.fillStyle='#7c8a90';g.fillText(hhmm(h*60),gut-6,y)}
+  g.setLineDash([]);
+  const sb=selMin==null?null:curBins[Math.floor(selMin/binMin)];
+  if(sb){g.fillStyle='rgba(243,210,122,.12)';g.fillRect(gut,Y(sb.i)-Math.max(rowH,2)/2,W-gut,Math.max(rowH,2))}
+  const marks=[];
+  TH.forEach((t,j)=>{
+    const cx=gut+colW*(j+.5),hw=b=>Math.max(.75,colW*.44*Math.min(1,b.v[t.k]/t.max));
+    let seg=[];
+    const flush=()=>{if(!seg.length)return;
+      const p=seg.map(b=>[Y(b.i),hw(b)]);p.unshift([p[0][0]+rowH/2,p[0][1]]);p.push([p[p.length-1][0]-rowH/2,p[p.length-1][1]]);
+      g.beginPath();p.forEach(([y,w],n)=>n?g.lineTo(cx+w,y):g.moveTo(cx+w,y));for(let n=p.length-1;n>=0;n--)g.lineTo(cx-p[n][1],p[n][0]);
+      g.closePath();g.fillStyle=t.c;g.shadowColor=t.c;g.shadowBlur=8;g.fill();g.shadowBlur=0;seg=[]};
+    curBins.forEach(b=>{
+      if(b.ok[t.k])seg.push(b);
+      else{flush();g.strokeStyle=t.c;g.setLineDash([2,3]);g.beginPath();g.moveTo(cx,Y(b.i)+rowH/2);g.lineTo(cx,Y(b.i)-rowH/2);g.stroke();g.setLineDash([])}
+      if(b.al[t.k])marks.push([cx+(b.ok[t.k]?hw(b):0)+4,Y(b.i),b.al[t.k]]);
+    });
+    flush();
+  });
+  marks.forEach(([x,y,n])=>{g.beginPath();g.arc(x,y,Math.min(7,2.5+1.5*Math.sqrt(n)),0,7);g.fillStyle='#ff4d5e';g.fill();g.strokeStyle='#fff';g.lineWidth=1;g.stroke()});
+  inspect(sb||curBins[nb-1]);
+}
+function inspect(b){
+  if(!b){$('vals').innerHTML='<tr><td>No data yet</td></tr>';return}
+  const f=(t,v)=>t.rate?v.toFixed(1):v;
+  $('vals').innerHTML=`<tr><td colspan=3>${hhmm(b.m)}–${hhmm(b.m+binMin)} ${selMin==null?'(latest)':''}</td></tr><tr><td></td><td><small>value</small></td><td><small>alarms</small></td></tr>`+
+    TH.map(t=>`<tr><td style="color:${t.c}">${t.lab}</td><td>${b.ok[t.k]?f(t,b.v[t.k]):'— no data'}</td><td>${b.al[t.k]||''}</td></tr>`).join('')+
+    `<tr><td><small>Lines 1/2/3 (units)</small></td><td colspan=2>${b.ok.produced?b.lines.join(' / '):'—'}</td></tr>`;
+  const key=selMin==null?'':b.m+'/'+binMin+'/'+evts.length;
+  if(key!==hlKey){hlKey=key;let first=null; // highlight grid rows inside the selected bin
+    document.querySelectorAll('#events tr').forEach(tr=>{const m=+tr.dataset.m,on=selMin!=null&&m>=b.m&&m<b.m+binMin;tr.classList.toggle('sel',on);if(on&&!first)first=tr});
+    if(first)first.scrollIntoView({block:'nearest'})}
+}
+function pick(e){
+  if(!geo||!geo.nb)return;const r=$('mud').getBoundingClientRect();
+  const i=Math.max(0,Math.min(geo.nb-1,geo.nb-1-Math.floor((e.clientY-r.top-geo.top)/geo.rowH)));
+  selMin=i*binMin;dirty=true;
+}
+let dragging=false;
+$('mud').onpointerdown=e=>{dragging=true;$('mud').setPointerCapture(e.pointerId);pick(e)};
+$('mud').onpointermove=e=>{if(dragging)pick(e)};
+$('mud').onpointerup=()=>dragging=false;
+$('live').onclick=()=>{selMin=null;dirty=true};
+$('bin').onchange=e=>{binMin=+e.target.value;dirty=true};
+$('alarmsOnly').onchange=e=>$('events').classList.toggle('ao',e.target.checked);
+$('events').onclick=e=>{const tr=e.target.closest('tr');if(tr){selMin=+tr.dataset.m;dirty=true}};
+new ResizeObserver(()=>dirty=true).observe($('stage'));
+$('introClose').onclick=()=>{$('intro').close();$('audioBtn').classList.add('pulse')};
+$('introSound').onclick=()=>{$('intro').close();if(!audioOn)$('audioBtn').onclick();if(!playing)$('play').onclick()};
+$('intro').showModal();
+</script>
+</body>
+</html>
