@@ -72,14 +72,14 @@ function gen(m){
   const valid={};SIG.forEach(k=>valid[k]=!anoms.some(x=>x.type==='drop'&&x.key===k&&m>=x.s&&m<x.s+lenOf(x)));
   anoms.filter(x=>x.type==='drop'&&x.s+lenOf(x)===m).forEach(x=>ev('Telemetry','Restored — '+SIGLAB[SIG.indexOf(x.key)]));
   return{m,timestamp:`2026-10-15T${hhmm(m)}:00`,windowSeconds:60,materialsIn:mi,produced:prod,qaInspected:ins,qaRejected:rej,
-    warehouse:st.wh,trucksWaiting:st.tq.length,truckLoad:st.load,starve,lines,prodE:st.prodE,qaE:st.qaE,alarms:al,valid,ctl:{H,sup:st.sup,maint:st.maint,proc:st.proc,disp:st.disp}};
+    warehouse:st.wh,trucksWaiting:st.tq.length,truckLoad:st.load,starve,lines,buffer:st.buf,prodE:st.prodE,qaE:st.qaE,alarms:al,valid,ctl:{H,sup:st.sup,maint:st.maint,proc:st.proc,disp:st.disp}};
 }
 
 // ---- audio: ambient beds for normal flow (soothing), distinct strikes for faults (attention) ----
 // Panned left→right along the material flow. Missing telemetry silences that voice.
 let AC=null,master,wet,beds={},ch={},audioOn=false;
 // Per-voice mixer (0–2×), remembered per browser so each operator can tune the background.
-const MIX={water:'Water (materials in)',chord:'Chord & bass (production)',kalimba:'Kalimba (lines)',crickets:'Crickets (QA cadence)',wind:'Wind (trucks parked)',drone:'Discord drone (strain)',faults:'Knocks & bells (alarms)'};
+const MIX={water:'Water (materials in)',chord:'Chord & bass (production)',kalimba:'Line notes (production)',crickets:'Crickets (QA cadence)',wind:'Wind (trucks parked)',drone:'Discord drone (strain)',faults:'Knocks & bells (alarms)'};
 const MIX_DEFAULT={water:.05,chord:.1,kalimba:.15,crickets:.25,wind:.15,drone:1,faults:1}; // quiet background, faults stay prominent
 const mixVal={...MIX_DEFAULT};
 try{Object.assign(mixVal,JSON.parse(localStorage.getItem('soundscape-mix')||'{}'))}catch(e){}
@@ -91,6 +91,7 @@ function initAudio(){
   for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3)}
   const cv=AC.createConvolver();cv.buffer=ir;wet=AC.createGain();wet.gain.value=.5;wet.connect(cv).connect(master);
   Object.keys(MIX).forEach(k=>{const d=AC.createGain(),w=AC.createGain();d.gain.value=w.gain.value=mixVal[k];d.connect(master);w.connect(wet);ch[k]=[d,w]}); // [dry, reverb send]
+  noiseBuf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);{const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
   const noise=brown=>{const b=AC.createBuffer(1,AC.sampleRate*4,AC.sampleRate),d=b.getChannelData(0);let l=0;
     for(let i=0;i<d.length;i++){const w=Math.random()*2-1;l=(l+.02*w)/1.02;d[i]=brown?l*3.5:w}
     const s=AC.createBufferSource();s.buffer=b;s.loop=true;s.start();return s};
@@ -127,17 +128,37 @@ function conductor(){
     if(h>.7&&padLevel>.1)osc('sine',c[0],t,3,env(t,.07*padLevel,.01,2.6,bus(0,.5,'chord')));
     nextBar+=4*BEAT}
 }
+// Production line voices, pickable per line and remembered per browser. Warm, harmonic timbres by default so
+// normal running never shares the metallic, inharmonic colour reserved for alarm bells.
+const INSTR={pluck:'Nylon pluck',marimba:'Soft marimba',felt:'Felt piano',pad:'Pad swell',shaker:'Shaker (no pitch)',kalimba:'Kalimba (bright)'};
+const lineInst=['pluck','pluck','pluck'];
+try{const v=JSON.parse(localStorage.getItem('soundscape-lines')||'null');if(Array.isArray(v))v.forEach((x,i)=>{if(i<3&&INSTR[x])lineInst[i]=x})}catch(e){}
+function setLineInst(l,v){lineInst[l]=v;try{localStorage.setItem('soundscape-lines',JSON.stringify(lineInst))}catch(e){}}
+const OCT={kalimba:2,pluck:1,marimba:1,felt:1,pad:1,shaker:1},INST_G={pluck:.55,marimba:1,felt:1,pad:.8,shaker:.6,kalimba:1};
+let noiseBuf=null;
+const lowpass=f=>{const b=AC.createBiquadFilter();b.type='lowpass';b.Q.value=.7;b.frequency.value=f;return b};
+const VOICE={ // (start, pitch, peak gain, destination)
+  pluck(t,f,g,p){const l=lowpass(Math.min(6000,f*8));l.frequency.setValueAtTime(Math.min(6000,f*8),t);l.frequency.exponentialRampToValueAtTime(f*1.2,t+.35); // filter closes like a damped string
+    l.connect(env(t,g,.003,1.1,p));osc('sawtooth',f,t,1.3,l);osc('triangle',f*1.003,t,1.3,l)},
+  marimba(t,f,g,p){osc('sine',f,t,.9,env(t,g,.004,.7,p));osc('sine',f*4,t,.2,env(t,g*.25,.002,.12,p))}, // wooden bar: 4× overtone is harmonic
+  felt(t,f,g,p){const l=lowpass(Math.min(2500,f*3));l.connect(env(t,g,.018,1.8,p));osc('triangle',f,t,2,l);osc('sine',f*2,t,1,env(t,g*.15,.02,.6,p))},
+  pad(t,f,g,p){const e=env(t,g*.6,.35,2.4,p);osc('sine',f,t,2.9,e);osc('sine',f*1.004,t,2.9,e)},
+  shaker(t,f,g,p){const s=AC.createBufferSource(),b=AC.createBiquadFilter();s.buffer=noiseBuf;b.type='bandpass';b.frequency.value=6500;b.Q.value=1.2;
+    s.connect(b).connect(env(t,g*.6,.004,.05,p));s.start(t,Math.random()*1.5,.08)},
+  kalimba(t,f,g,p){osc('sine',f,t,1.6,env(t,g,.006,1.4,p));osc('sine',f*5.4,t,.3,env(t,g*.13,.002,.2,p))}, // the original; shares the bell's 5.4× partial
+};
 const SND={
   drop(t){const f=500+Math.random()*600,o=osc('sine',f,t,.2,env(t,.06,.004,.12,bus(-.75,.8,'water')));o.frequency.exponentialRampToValueAtTime(f*2.2,t+.05)},
-  kalimba(t,l){let f=CHORDS[chord][Math.random()*4|0]*[2,2,4][l];if(Math.random()<.8*(1-harmony))f*=Math.pow(2,((Math.random()*11|0)+1+Math.random()*.6-.3)/12);
+  line(t,l,v=1){const ins=lineInst[l];let f=CHORDS[chord][Math.random()*4|0]*OCT[ins]*[1,1,2][l];
+    if(Math.random()<.8*(1-harmony))f*=Math.pow(2,((Math.random()*11|0)+1+Math.random()*.6-.3)/12); // strain pushes notes off key
     if(harmony>.6)t=Math.ceil(t/(BEAT/2))*(BEAT/2); // on the half-beat when flow is healthy
-    const p=bus([-.3,0,.3][l],.7,'kalimba');
-    osc('sine',f,t,1.6,env(t,[.06,.045,.025][l],.006,1.4,p));osc('sine',f*5.4,t,.3,env(t,.008,.002,.2,p))},
+    VOICE[ins](t,f,[.06,.045,.03][l]*INST_G[ins]*v,bus([-.3,0,.3][l],ins==='pad'?.9:.7,'kalimba'))},
   cricket(t){const p=bus(.45,.9,'crickets');for(let i=0;i<3;i++){const s=t+i*.035;osc('sine',3600,s,.03,env(s,.006,.005,.02,p))}},
   knock(t){const p=bus(.45,.25,'faults');[0,.13].forEach(d=>{const o=osc('sine',560,t+d,.15,env(t+d,.22,.002,.09,p));o.frequency.exponentialRampToValueAtTime(380,t+d+.08);
     osc('triangle',1400,t+d,.04,env(t+d,.05,.001,.03,p))})}, // QA reject: wood knock
   bell(t,pan){const p=bus(pan,.45,'faults');[[1,.11,3],[2.76,.05,2],[5.4,.025,1],[8.9,.012,.6]].forEach(([r,g,d])=>osc('sine',830.6*r,t,d+.1,env(t,g,.003,d,p)))} // other alarms: off-key bowl
 };
+const LINE_GAP=.5,lineNext=[0,0,0];
 function playMinute(s,t0,D){ // continuous beds follow rates; sparse notes thinned to a per-second cap
   if(!AC||!audioOn)return;
   const at=()=>t0+Math.random()*D,thin=(n,cap)=>Math.min(n,Math.max(n?1:0,Math.round(cap*D))),
@@ -146,7 +167,9 @@ function playMinute(s,t0,D){ // continuous beds follow rates; sparse notes thinn
   padLevel=V.produced?pn:0;set(beds.pad.gain,V.produced?.004+.014*pn:0);set(beds.padLP.frequency,250+1100*pn);
   set(beds.wind.gain,V.trucksWaiting?.015+.3*n1(s.trucksWaiting/6):0);
   if(V.materialsIn)for(let i=thin(s.materialsIn,.4);i--;)SND.drop(at());
-  if(V.produced)s.lines.forEach((n,l)=>{for(let i=thin(n,.25);i--;)SND.kalimba(at(),l)});
+  // line notes: capped in real time (~2/s per line) at any speed; a busier line plays a little louder rather than more often
+  if(V.produced)s.lines.forEach((n,l)=>{const v=.8+.4*Math.min(1,n/6);
+    Array.from({length:thin(n,.25)},at).sort((a,b)=>a-b).forEach(t=>{if(t<lineNext[l])return;lineNext[l]=t+LINE_GAP;SND.line(t,l,v)})});
   if(V.qaInspected){const n=thin(s.qaInspected,1);for(let i=0;i<n;i++)SND.cricket(t0+(i+.5)*D/n)} // even cadence: absence is audible
   if(V.qaRejected)for(let i=thin(s.qaRejected,1);i--;)SND.knock(at());
   const al=s.alarms;[['materialsIn',-.7],['produced',0],['warehouse',.5],['trucksWaiting',.8]].forEach(([k,p])=>{for(let i=Math.min(al[k],2);i--;)SND.bell(at(),p)});
@@ -165,7 +188,8 @@ function advance(to){
 function status(){
   $('clock').textContent=hhmm(Math.floor(simT))+(playing?'':' ⏸');
   const s=mins[mins.length-1],miss=s?SIG.filter(k=>!s.valid[k]).map(k=>SIGLAB[SIG.indexOf(k)]):[];
-  $('telem').textContent=miss.length?'Telemetry unavailable: '+miss.join(', '):harmony<.75&&lastCause?'Likely cause: '+lastCause:'';
+  const tm=miss.length?'Telemetry unavailable: '+miss.join(', '):harmony<.75&&lastCause?'Likely cause: '+lastCause:'';
+  $('telem').textContent=tm;$('telem').title=tm; // title shows the full text if it's cut short
   if($('harm'))$('harm').firstChild.textContent=`Flow harmony ${harmony.toFixed(2)} · ${mood(harmony)} `;
   if($('harmBar'))$('harmBar').style.background=harmony>=.75?'':harmony>=.45?'var(--lamp)':'var(--rosehip)';
   if(s&&$('rates'))Object.entries(RATES).forEach(([k,[,c,cl]])=>$('rc-'+k).textContent=s.ctl.H?`${cl} ×${s.ctl[c].toFixed(2)}`:'control off');
@@ -209,7 +233,12 @@ $('replaySel').onclick=async()=>{
 if($('mix')){ // per-voice sound mixer
   $('mix').innerHTML=Object.entries(MIX).map(([k,lab])=>`<label class="rate">${lab}<input type="range" min="0" max="2" step=".05" value="${mixVal[k]}" data-k="${k}"><b id="mv-${k}">${Math.round(mixVal[k]*100)}%</b></label>`).join('');
   $('mix').querySelectorAll('input').forEach(i=>i.oninput=()=>{setMix(i.dataset.k,+i.value);$('mv-'+i.dataset.k).textContent=Math.round(i.value*100)+'%'});
-  $('mixReset').onclick=()=>$('mix').querySelectorAll('input').forEach(i=>{i.value=MIX_DEFAULT[i.dataset.k];i.oninput()});
+  $('mix').insertAdjacentHTML('beforeend',`<div class="lineinst"><span>Line sounds</span>${[0,1,2].map(l=>`<label>Line ${l+1}<select data-l="${l}">${
+    Object.entries(INSTR).map(([k,n])=>`<option value="${k}"${lineInst[l]===k?' selected':''}>${n}</option>`).join('')}</select></label>`).join('')}</div>`);
+  $('mix').querySelectorAll('select').forEach(sel=>sel.onchange=()=>{const l=+sel.dataset.l;setLineInst(l,sel.value);
+    if(AC&&audioOn)[0,.35,.7].forEach(d=>SND.line(AC.currentTime+.05+d,l))}); // short preview of the new sound
+  $('mixReset').onclick=()=>{$('mix').querySelectorAll('input').forEach(i=>{i.value=MIX_DEFAULT[i.dataset.k];i.oninput()});
+    $('mix').querySelectorAll('select').forEach(sel=>{sel.value='pluck';setLineInst(+sel.dataset.l,'pluck')})};
 }
 if($('rates')){ // rate sliders + homeostasis toggle (mudlog page)
   $('rates').innerHTML=Object.entries(RATES).map(([k,[lab,,cl]])=>`<label class="rate">${lab}<input type="range" min="0" max="4" step=".1" value="1" data-k="${k}"><b id="rv-${k}">×1.0</b><i id="rc-${k}" title="${cl}"></i></label>`).join('');

@@ -30,9 +30,14 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.45 var(--ui);font-variant-numeric:tabular-nums}
+body{display:flex;flex-direction:column;margin:0;background:var(--ground);color:var(--ink);font:15px/1.45 var(--ui);font-variant-numeric:tabular-nums}
 button,select,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+/* scrollbars: always present (so content never shifts when one appears), thin and quiet */
+*{scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--rule);border-radius:4px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background-color:var(--mute)}
 
 /* header: name · clock & harmony · transport · sound */
 header{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:24px;padding:10px 20px;border-bottom:1px solid var(--rule)}
@@ -40,16 +45,15 @@ header{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;
 .brand small{display:block;font:400 13px var(--ui);color:var(--mute);margin-top:4px}
 .transport,.sound{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .readout{display:flex;align-items:center;gap:16px;justify-self:center}
-#clock{font:500 32px/1 var(--label);min-width:4.6ch}
-.harmony{display:grid;gap:4px;width:210px}
+#clock{font:500 32px/1 var(--label);width:3.6em;white-space:nowrap} /* fixed: the ⏸ suffix must not push the harmony block */
+.harmony{display:grid;gap:4px;width:210px;min-width:0}
 #harm{display:flex;align-items:center;gap:6px;font:400 13px var(--label);color:var(--ink-2);white-space:nowrap}
 #harmHelp{width:18px;height:18px;padding:0;border-radius:50%;font:600 11px/1 var(--label);color:var(--mute);flex:none}
 #harmInfo{max-width:min(380px,calc(100% - 32px));background:var(--ground);color:var(--ink-2);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;font-size:14px}
 #harmInfo p{margin:0 0 8px}#harmInfo b{color:var(--ink);font-weight:600}#harmInfo::backdrop{background:rgba(10,16,21,.5)}
 .meter{height:4px;background:var(--rule);border-radius:2px;overflow:hidden}
 #harmBar{height:100%;width:100%;background:var(--ink-2);transition:width .6s}
-#telem{font:500 13px var(--label);color:var(--lamp)}
-#telem:empty{display:none}
+#telem{font:500 13px var(--label);color:var(--lamp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em} /* line always reserved so the header never changes size */
 
 button{background:transparent;border:1px solid var(--rule);border-radius:4px;padding:6px 12px;cursor:pointer;font:500 14px var(--label)}
 button:hover{border-color:var(--mute)}
@@ -61,12 +65,12 @@ input[type=range]{accent-color:var(--ink-2)}
 input[type=checkbox]{accent-color:var(--lamp)}
 
 /* three columns: log tape · recorder strip · control rail */
-main{display:grid;grid-template-columns:320px minmax(0,1fr) 290px;height:calc(100% - 64px)}
+main{display:grid;grid-template-columns:320px minmax(0,1fr) 290px;flex:1;min-height:0}
 main>*{min-width:0}
 #evcard{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--rule)}
 .colhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px 8px}
 h2{margin:0;font:600 15px var(--label);color:var(--ink)}
-#evwrap{overflow:auto;flex:1}
+#evwrap{overflow-y:scroll;flex:1}
 table{width:100%;border-collapse:collapse}
 #events td{padding:5px 6px;border-top:1px solid var(--rule-soft);vertical-align:top;font-size:13px;color:var(--ink-2)}
 #events td:first-child{padding-left:16px;font-family:var(--label);color:var(--mute);width:48px}
@@ -76,7 +80,29 @@ table{width:100%;border-collapse:collapse}
 #events tr.sel{background:rgba(242,213,138,.12)}
 #events.ao tr:not(.alarm){display:none}
 #logResume{margin-left:auto;padding:3px 10px;border-color:var(--lamp);color:var(--lamp);font-size:13px}
-#stage{min-height:0;background:var(--strip);position:relative}
+#stage{min-height:0;background:var(--strip);position:relative;display:grid;grid-template-rows:auto minmax(0,1fr)}
+#views{gap:4px;padding:6px 8px 0;border-bottom:1px solid var(--rule)}
+#views button{border:1px solid transparent;border-bottom:0;border-radius:4px 4px 0 0;padding:4px 14px 5px;color:var(--mute);font:600 13px var(--label);margin-bottom:-1px}
+#views button[aria-selected=true]{background:var(--strip);border-color:var(--rule);color:var(--ink)}
+#views button:hover{color:var(--ink)}
+#tabCctv::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--rosehip);margin-right:6px;vertical-align:1px}
+#mud,#stage #cctv{grid-area:2/1}
+/* desktop: CCTV lives as a live thumbnail under the event log and opens into a large overlay */
+#pip{flex:none;display:block;width:100%;padding:10px 16px 14px;border:0;border-top:1px solid var(--rule);border-radius:0;text-align:left;background:transparent;cursor:zoom-in}
+#pip:hover{background:var(--strip)}#pip:hover #pipFrame{border-color:var(--mute)}
+#pip .colhead{padding:0 0 8px}#pip .colhead span{font:400 13px var(--label);color:var(--mute)}
+#pip h2::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rosehip);margin-right:7px;vertical-align:1px;animation:rec 1.2s steps(2) infinite}
+@keyframes rec{50%{opacity:.25}}
+#pipFrame{height:136px;border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+#cctvDlg{max-width:none;width:min(1500px,96vw);height:min(900px,92vh);padding:0;background:#0E161C;display:none;flex-direction:column;overflow:hidden}
+#cctvDlg[open]{display:flex;cursor:zoom-out}
+#cctvDlg .colhead{padding:10px 14px;border-bottom:1px solid var(--rule)}#cctvDlg .colhead span{color:var(--mute);font:400 13px var(--label)}
+#cctvBody{flex:1;min-height:0}
+#cctvDlg h2{font-size:16px;margin:0}
+#views{display:none}
+@media(prefers-reduced-motion:reduce){#pip h2::before{animation:none}}
+#cctv{width:100%;height:100%;display:block;background:#0E161C}
+#stage.cam #mud,#stage.cam #key,#stage:not(.cam) #cctv{display:none}
 #key{position:absolute;left:50px;right:0;bottom:0;padding:4px 8px;text-align:center;font:400 12px var(--label);color:var(--mute);background:rgba(27,40,50,.85);pointer-events:none}
 #key b{color:var(--rosehip);font-weight:400}
 #summary{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 32px));background:var(--ground);border:1px solid var(--rule);border-radius:6px;padding:18px 20px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
@@ -91,7 +117,7 @@ table{width:100%;border-collapse:collapse}
 #secDist button[data-a]{border-color:rgba(240,96,93,.55)}#secDist button[data-a]:hover{border-color:var(--rosehip)}
 #mud{width:100%;height:100%;display:block;touch-action:none;cursor:row-resize}
 
-aside{overflow:auto;min-height:0;border-left:1px solid var(--rule)}
+aside{overflow-y:scroll;min-height:0;border-left:1px solid var(--rule)}
 aside section{padding:14px 18px 16px;border-bottom:1px solid var(--rule)}
 aside section>.colhead{padding:0 0 10px}
 .row{display:flex;flex-wrap:wrap;gap:6px}
@@ -104,12 +130,14 @@ aside section>.colhead{padding:0 0 10px}
 .rate input{grid-column:1/-1;width:100%;margin:4px 0 0}
 .rate b{grid-row:1;grid-column:2;font:500 14px var(--label);color:var(--ink-2)}
 .rate i{grid-column:1/-1;font:400 12px var(--label);color:var(--mute);font-style:normal;min-height:1em}
-#log{max-height:96px;overflow:auto;font:400 13px var(--label);color:var(--mute);margin:10px 0 0;padding-left:18px}
+#log{max-height:96px;overflow-y:auto;scrollbar-gutter:stable;font:400 13px var(--label);color:var(--mute);margin:10px 0 0;padding-left:18px}
 #log:empty{display:none}
 .note{margin:0;padding:14px 18px;font-size:13px;color:var(--mute)}
 .credit{margin:0;padding:0 18px 18px;font:400 13px var(--label);color:var(--mute)}
 .credit a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--rule)}.credit a:hover{color:var(--ink)}
 #replaySel{margin-top:10px;width:100%}
+.lineinst{display:grid;gap:6px;margin-top:4px}.lineinst>span{color:var(--ink);font:400 14px var(--ui)}
+.lineinst label{justify-content:space-between}.lineinst select{width:150px}
 
 /* mobile explainer (stands in for the intro dialog on small screens) */
 #tip{display:none;padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--strip);font-size:14px;color:var(--ink-2)}
@@ -121,11 +149,11 @@ aside section>.colhead{padding:0 0 10px}
 @media(max-width:1100px){
   header{grid-template-columns:1fr auto;row-gap:10px}.readout{justify-self:start}
   html,body{height:auto}
+  html{overflow-y:scroll}
   main{grid-template-columns:minmax(0,1fr);height:auto}#stage{order:-1;height:78svh}#evcard{height:45svh;border:0;border-top:1px solid var(--rule)}aside{border:0}
-  .harmony{min-width:0}
+  #views{display:flex}#pip{display:none}
   aside{display:contents} /* let the disturbance buttons sit right under the chart */
   #secDist{order:-1}
-  #telem,#telem:empty{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em} /* reserve the line so the header never changes height */
 }
 @media(max-width:700px){
   /* app shell: header and the top of the recorder stay put; only the panel below the chart scrolls */
@@ -140,7 +168,7 @@ aside section>.colhead{padding:0 0 10px}
   .transport,.sound{gap:6px;flex:none}
   #secView{order:-1}
   #vol{width:64px!important}
-  main{display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+  main{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:scroll;overscroll-behavior:contain}
   main>*{flex:none}
   #stage{position:sticky;top:0;z-index:1;height:58%;border-bottom:1px solid var(--rule)}
   #evcard{height:auto;border-top:0}#evwrap{max-height:40svh}
@@ -161,7 +189,7 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
 <body>
 <div id="tip" role="region" aria-label="About this page">
   <p><b>Factory pulse</b> turns a simulated factory day into sound and a chart recorder. Harmonious music means it's running fine; discordant means something's off.</p>
-  <p>Each coloured thread is one measurement (wider means more, newest at the top); red dots are alarms. Tap the chart to read a moment. Then break something with the buttons under the chart and listen. Headphones help.</p>
+  <p>Each coloured thread is one measurement (wider means more, newest at the top); red dots are alarms. Tap the chart to read a moment. Then break something with the buttons under the chart and listen, or switch to <b>CCTV</b> to watch the floor. Headphones help.</p>
   <div class="row"><button id="tipClose">Got it</button><button id="tipSound">Turn sound on</button></div>
 </div>
 <header>
@@ -185,8 +213,11 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
   <div id="evcard">
     <div class="colhead"><h2>Event log</h2><button id="logResume" hidden></button><label><input type="checkbox" id="alarmsOnly">Alarms only</label></div>
     <div id="evwrap"><table><tbody id="events"></tbody></table></div>
+    <button id="pip" aria-label="Open the CCTV view of the factory floor"><div class="colhead"><h2>CCTV</h2><span>Click to enlarge</span></div><div id="pipFrame"></div></button>
   </div>
-  <div id="stage"><canvas id="mud" aria-label="Five measurement threads over time, newest at top"></canvas>
+  <div id="stage">
+    <div id="views" role="tablist" aria-label="View"><button role="tab" id="tabChart" aria-selected="true">Chart</button><button role="tab" id="tabCctv" aria-selected="false">CCTV</button></div>
+    <canvas id="mud" aria-label="Five measurement threads over time, newest at top"></canvas>
     <div id="key" aria-hidden="true">Wider = more · dashed = no data · <b>●</b> alarm · tap or drag to read</div>
     <div id="summary" hidden><h2>Day complete</h2><div id="sumText"></div>
       <div class="row"><button id="sumClose">Close</button><button id="sumReplay">Replay with a disruption</button></div></div>
@@ -235,10 +266,16 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
     <li><b>Look.</b> Each coloured thread is one measurement; wider means more. Newest is at the top. Red dots are alarms.</li>
     <li><b>Read the harmony.</b> <i>Flow harmony</i> in the top bar sums it up: 1.00 means everything flows, and it falls as lines run short of materials, trucks queue up or QA rejects rise.</li>
     <li><b>Break things.</b> Use <i>Cause a disruption</i> on the right, change event rates, and switch homeostasis off to see whether the factory recovers on its own.</li>
+    <li><b>Compare.</b> Open the <b>CCTV</b> panel at the bottom left to watch cartoon cameras of the factory floor, with alarms flashing as they happen. Try the same disruption both ways: watching the cameras, then just listening and following the chart and event log. Which tells you sooner that something's wrong, and what it is?</li>
   </ul>
   <p>Sound stays off until you choose <b>Turn sound on</b> in the top bar. Headphones help: the sound pans left to right along the flow.</p>
   <div class="row"><button id="introClose">Close</button><button id="introSound">Turn sound on and start</button></div>
 </dialog>
+<dialog id="cctvDlg" aria-label="CCTV view of the factory floor">
+  <div class="colhead"><h2>CCTV · factory floor</h2><span>Click anywhere or press Esc to close</span><button id="cctvClose" aria-label="Close CCTV">✕ Close</button></div>
+  <div id="cctvBody"></div>
+</dialog>
+<canvas id="cctv" aria-label="Cartoon camera feeds of each factory area"></canvas>
 <div id="harmInfo" popover>
   <p><b>Flow harmony</b> is a single score for how well the factory is flowing, from <b>1.00</b> (everything moving) down to <b>0.00</b> (badly stuck).</p>
   <p>It falls when lines run short of materials, trucks queue in the yard, QA rejects rise or a line stops. It recovers gradually, so a dip lingers for a few minutes after the cause has passed.</p>
@@ -246,6 +283,7 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
 </div>
 <div id="toast" role="status" hidden></div>
 <script src="core.js"></script>
+<script src="cctv.js"></script>
 <script>
 const TH=[ // fixed calibration per thread; alarm counts come from sample.alarms[k]
   {k:"materialsIn",lab:"Materials",u:"units/min",max:40,rate:1,c:'#5EC4B6'},
@@ -361,6 +399,23 @@ const dismissTip=()=>{$('tip').hidden=true;try{localStorage.setItem('soundscape-
 try{if(localStorage.getItem('soundscape-tip'))$('tip').hidden=true}catch(e){}
 $('tipClose').onclick=dismissTip;
 $('tipSound').onclick=()=>{dismissTip();startWithSound()};
+// Chart / CCTV tabs; the choice is remembered per browser
+// CCTV: on desktop a live thumbnail under the event log that opens into an overlay; on smaller screens a tab beside the chart.
+// One canvas moves between the three places.
+const wide=matchMedia('(min-width:1101px)');let view='chart';
+try{if(localStorage.getItem('soundscape-view')==='cctv')view='cctv'}catch(e){}
+const placeCctv=()=>{const cv=$('cctv'),dlg=$('cctvDlg');
+  if(wide.matches){$('stage').classList.remove('cam');(dlg.open?$('cctvBody'):$('pipFrame')).append(cv);CCTV.show(true)}
+  else{if(dlg.open)dlg.close();$('stage').append(cv);const cam=view==='cctv';$('stage').classList.toggle('cam',cam);
+    $('tabChart').setAttribute('aria-selected',!cam);$('tabCctv').setAttribute('aria-selected',cam);CCTV.show(cam)}
+  dirty=true};
+const setView=v=>{view=v;try{localStorage.setItem('soundscape-view',v)}catch(e){}placeCctv()};
+$('tabChart').onclick=()=>setView('chart');$('tabCctv').onclick=()=>setView('cctv');
+$('pip').onclick=()=>{$('cctvDlg').showModal();placeCctv()};
+$('cctvClose').onclick=()=>$('cctvDlg').close();
+$('cctvDlg').onclick=()=>$('cctvDlg').close(); // nothing to interact with inside, so any click (backdrop included) closes it
+$('cctvDlg').addEventListener('close',placeCctv);
+wide.addEventListener('change',placeCctv);placeCctv();
 $('sumClose').onclick=()=>$('summary').hidden=true;
 $('sumReplay').onclick=()=>{$('restart').onclick();$('summary').hidden=true;
   $('secDist').scrollIntoView({block:'nearest',behavior:'smooth'});
