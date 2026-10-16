@@ -246,7 +246,11 @@ if($('rates')){ // rate sliders + homeostasis toggle (mudlog page)
   $('rates').querySelectorAll('input').forEach(i=>{
     i.oninput=()=>$('rv-'+i.dataset.k).textContent='×'+(+i.value).toFixed(1);
     i.onchange=()=>{setAt(i.dataset.k,+i.value);log(`${hhmm(mins.length)} ${RATES[i.dataset.k][0]} ×${(+i.value).toFixed(1)}`)}});
-  $('homeo').onchange=e=>{setAt('homeo',e.target.checked?1:0);log(`${hhmm(mins.length)} homeostasis ${e.target.checked?'on':'off'}`)};
+  const ctlShow=on=>{if(!$('ctlState'))return;$('ctlState').textContent=on?'homeostasis in charge':'you are in charge';
+    $('ctlNote').textContent=on?'The factory balances itself: supply, maintenance, QA and truck dispatch slowly correct any disruption. Switch to Manual to take over.'
+      :'Automatic balancing is off. Disruptions are no longer corrected, so see whether the factory recovers on its own.'};
+  $('homeo').onchange=e=>{setAt('homeo',e.target.checked?1:0);ctlShow(e.target.checked);log(`${hhmm(mins.length)} ${e.target.checked?'homeostasis back in control':'manual control'}`)};
+  ctlShow($('homeo').checked);
 }
 reset();
 // start only after the page script has defined draw() (inline scripts can be delayed by pending stylesheets)

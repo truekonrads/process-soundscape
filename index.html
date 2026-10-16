@@ -116,6 +116,8 @@ table{width:100%;border-collapse:collapse}
 #secDist button.feed.on{background:rgba(240,96,93,.16);border-style:solid;border-color:var(--rosehip);color:var(--ink)}
 #secDist .dbody .hint:first-child{margin-top:0}
 #secDist button[data-a]{border-color:rgba(240,96,93,.55)}#secDist button[data-a]:hover{border-color:var(--rosehip)}
+#order{position:absolute;left:4px;top:6px;z-index:1;padding:2px 6px;font:500 12px var(--label);color:var(--mute);background:var(--strip)}
+#order:hover,#order[aria-pressed=true]{color:var(--ink)}#stage.cam #order{display:none}
 #mud{width:100%;height:100%;display:block;touch-action:none;cursor:row-resize}
 
 aside{overflow-y:scroll;min-height:0;border-left:1px solid var(--rule)}
@@ -149,6 +151,15 @@ aside section.drawer{padding:0;border-bottom:0;border-top:2px solid #0E161C} /* 
 #vals .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px}
 #vals .al{color:var(--rosehip);width:3em}
 #vals .sub{color:var(--mute)}
+.pill{position:relative;display:grid;grid-template-columns:1fr 1fr;margin:0 0 6px;padding:3px;border:1px solid var(--rule);border-radius:999px;background:var(--ground);cursor:pointer;font:500 14px var(--label)}
+.pill input{position:absolute;opacity:0;pointer-events:none}
+.pill span{position:relative;z-index:1;padding:6px 10px;text-align:center;color:var(--mute);transition:color .2s}
+.pill::before{content:'';position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:999px;background:#5EC4B6;transition:transform .2s,background .2s}
+.pill:has(input:not(:checked))::before{transform:translateX(100%);background:var(--lamp)}
+.pill:has(input:checked) .auto,.pill:has(input:not(:checked)) .man{color:#14202A}
+.pill:has(input:focus-visible){outline:2px solid var(--lamp);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.pill::before,.pill span{transition:none}}
+.ctlnote{margin:0 0 14px;color:var(--mute);font:400 13px/1.4 var(--ui)}
 .rate{display:grid;grid-template-columns:1fr auto;align-items:baseline;column-gap:8px;margin:0 0 10px;color:var(--ink);font:400 14px var(--ui)}
 .rate input{grid-column:1/-1;width:100%;margin:4px 0 0}
 .rate b{grid-row:1;grid-column:2;font:500 14px var(--label);color:var(--ink-2)}
@@ -240,7 +251,7 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
 <a href="https://github.com/truekonrads/process-soundscape" class="gh-corner" title="Clone me on GitHub" aria-label="Clone me on GitHub"><svg viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin:130px 106px" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor"/></svg></a>
 <div id="tip" role="region" aria-label="About this page">
   <p><b>Factory pulse</b> turns a simulated factory day into sound and a chart recorder. Harmonious music means it's running fine; discordant means something's off.</p>
-  <p>Each coloured thread is one measurement (wider means more, newest at the top); red dots are alarms. Tap the chart to read a moment. Then break something with the buttons under the chart and listen, or switch to <b>CCTV</b> to watch the floor. Headphones help.</p>
+  <p>Each coloured thread is one measurement (wider means more, oldest at the top, the white line is now); red dots are alarms. Tap the chart to read a moment. Then break something with the buttons under the chart and listen, or switch to <b>CCTV</b> to watch the floor. Headphones help.</p>
   <div class="row"><button id="tipClose">Got it</button><button id="tipSound">Turn sound on</button></div>
 </div>
 <header>
@@ -268,6 +279,7 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
   </div>
   <div id="stage">
     <div id="views" role="tablist" aria-label="View"><button role="tab" id="tabChart" aria-selected="true">Chart</button><button role="tab" id="tabCctv" aria-selected="false">CCTV</button></div>
+    <button id="order" aria-pressed="true">⇅ Flip</button>
     <canvas id="mud" aria-label="Five measurement threads over time, newest at top"></canvas>
     <div id="key" aria-hidden="true">Wider = more · dashed = no data · <b>●</b> alarm · tap or drag to read</div>
     <div id="summary" hidden><h2>Day complete</h2><div id="sumText"></div>
@@ -301,8 +313,10 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
       </div>
     </section>
     <section class="drawer" id="drRates">
-      <div class="colhead"><h2><button class="dtog" aria-expanded="false" aria-controls="drRatesBody" title="How often things go wrong, and whether the factory corrects itself."><span>Event rates</span><small>how often things go wrong</small></button></h2><label><input type="checkbox" id="homeo" checked>Homeostasis</label></div>
+      <div class="colhead"><h2><button class="dtog" aria-expanded="false" aria-controls="drRatesBody" title="Who keeps the factory balanced, and how often things go wrong."><span>Manual control</span><small id="ctlState">homeostasis in charge</small></button></h2></div>
       <div class="dbody" id="drRatesBody">
+        <label class="pill"><input type="checkbox" id="homeo" checked role="switch" aria-label="Homeostasis (automatic balancing)"><span class="auto">Homeostasis</span><span class="man">Manual</span></label>
+        <p class="ctlnote" id="ctlNote"></p>
         <div id="rates"></div>
       </div>
     </section>
@@ -328,9 +342,9 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
     <p class="lead">This is a simulated factory. Materials arrive, three assembly lines build products, QA inspects them and trucks carry them away. Instead of reading numbers, you'll learn what a normal day sounds and looks like, and you'll notice when it changes, often before you could say why.</p>
     <dl>
       <div><dt>Listen</dt><dd>Calm, in-key music means the factory is flowing. When it drifts off key or off the beat, something isn't right.</dd></div>
-      <div><dt>Look</dt><dd>Each coloured thread is one measurement, newest at the top. Wider means more; red dots are alarms.</dd></div>
+      <div><dt>Look</dt><dd>Each coloured thread is one measurement, oldest at the top and growing down to a white line marking now. Wider means more; red dots are alarms.</dd></div>
       <div><dt>Read the harmony</dt><dd>The score in the top bar sums it up, from 1.00 when everything flows to 0.00 when it's stuck. The line beneath names the likely cause.</dd></div>
-      <div><dt>Break things</dt><dd>Use <i>Cause a disruption</i> on the right, change event rates, or switch homeostasis off and see if the factory recovers on its own.</dd></div>
+      <div><dt>Break things</dt><dd>Use <i>Cause a disruption</i> on the right, or take manual control of the factory and see if the factory recovers on its own.</dd></div>
     </dl>
     <div class="compare">
       <p>Then open <i>CCTV</i> at the bottom left and try the same disruption again, this time watching cartoon cameras of the factory floor.</p>
@@ -362,7 +376,7 @@ const TH=[ // fixed calibration per thread; alarm counts come from sample.alarms
   {k:'qaInspected',lab:'QA',u:'inspected/min',max:16,rate:1,c:'#9CCB6B'},
   {k:'warehouse',lab:'Warehouse',u:'stock units',max:400,rate:0,c:'#E3A84B'},
   {k:'trucksWaiting',lab:'Logistics',u:'trucks parked',max:12,rate:0,c:'#B48BD6'}];
-let binMin=3,curBins=[],selMin=null,geo,hlKey='';
+let binMin=3,curBins=[],selMin=null,geo,hlKey='',oldTop=true; // oldTop (default): paper grows downwards, newest row at the bottom
 
 function bins(){
   const out=[];
@@ -382,9 +396,11 @@ function draw(){
   if(c.width!==Math.round(W*dpr)||c.height!==Math.round(H*dpr)){c.width=Math.round(W*dpr);c.height=Math.round(H*dpr)}
   const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
   curBins=bins();
-  // phones keep rows readable (>=4px) and let the oldest hours fall off the bottom
-  const nb=curBins.length,top=64,gut=50,rowH=Math.max((H-top-8)/(DAY/binMin),W<500?4:0),colW=(W-gut)/TH.length,Y=i=>top+(nb-1-i+.5)*rowH;
-  geo={top,rowH,nb};
+  // phones keep rows readable (>=4px) and let the oldest hours fall off the far end;
+  // oldest-on-top reserves room for the legend so the live row isn't hidden under it, and scrolls up once the paper overflows
+  const nb=curBins.length,top=64,gut=50,fit=H-top-(oldTop?$('key').offsetHeight+4:8),rowH=Math.max(fit/(DAY/binMin),W<500?4:0),colW=(W-gut)/TH.length,
+    off=oldTop?Math.max(0,nb*rowH-fit):0,nowY=oldTop&&nb&&mins.length<DAY?Math.round(top+nb*rowH-off)+.5:null,Y=i=>oldTop?top+(i+.5)*rowH-off:top+(nb-1-i+.5)*rowH,edge=iq=>oldTop?top+iq*rowH-off:top+(nb-iq)*rowH,dir=oldTop?-1:1;
+  geo={top,rowH,nb,off};$('order').style.top=c.offsetTop+6+'px';
   const sb=selMin==null?null:curBins[Math.floor(selMin/binMin)],rb=sb||curBins[nb-1]; // rb: the bin read out under the column labels
   g.textAlign='center';g.textBaseline='alphabetic';
   const F='"Barlow Semi Condensed",Barlow,system-ui';
@@ -395,16 +411,19 @@ function draw(){
   if(rb){g.textAlign='left';g.fillStyle=sb?'#F2D58A':'#82939A';g.font='500 12px '+F;g.fillText(sb?hhmm(sb.m):'Live',8,51)}
   if(!nb){g.textAlign='center';g.fillStyle='#82939A';g.font='500 15px '+F;g.fillText('Press ▶ Start to run the day',gut+(W-gut)/2,top+60)}
   g.textAlign='right';g.textBaseline='middle';g.lineWidth=1;
-  for(let q=0;q<=60;q++){const iq=q*10/binMin;if(iq>nb)break;const y=Math.round(top+(nb-iq)*rowH)+.5,hr=q%6===0; // recorder grid: 10-min ticks, hour rules
+  g.save();g.beginPath();g.rect(0,top-7,W,H);g.clip(); // keep scrolled-away paper out of the column header
+  for(let q=0;q<=60;q++){const iq=q*10/binMin;if(iq>nb)break;const y=Math.round(edge(iq))+.5,hr=q%6===0; // recorder grid: 10-min ticks, hour rules
+    if(y<top-1)continue;
     g.strokeStyle=hr?'#2E414E':'#21303B';g.beginPath();g.moveTo(gut,y);g.lineTo(W,y);g.stroke();
-    if(hr){g.fillStyle='#82939A';g.font='400 12px '+F;g.fillText(hhmm(q*10),gut-8,y)}}
+    if(hr&&!(nowY&&Math.abs(y-nowY)<14)){g.fillStyle='#82939A';g.font='400 12px '+F;g.fillText(hhmm(q*10),gut-8,y)}}
+  g.beginPath();g.rect(0,top,W,H);g.clip();
   if(sb){g.fillStyle='rgba(242,213,138,.16)';g.fillRect(gut,Y(sb.i)-Math.max(rowH,2)/2,W-gut,Math.max(rowH,2))}
   const marks=[];
   TH.forEach((t,j)=>{
     const cx=gut+colW*(j+.5),hw=b=>Math.max(.75,colW*.44*Math.min(1,b.v[t.k]/t.max));
     let seg=[];
     const flush=()=>{if(!seg.length)return;
-      const p=seg.map(b=>[Y(b.i),hw(b)]);p.unshift([p[0][0]+rowH/2,p[0][1]]);p.push([p[p.length-1][0]-rowH/2,p[p.length-1][1]]);
+      const p=seg.map(b=>[Y(b.i),hw(b)]);p.unshift([p[0][0]+dir*rowH/2,p[0][1]]);p.push([p[p.length-1][0]-dir*rowH/2,p[p.length-1][1]]);
       g.beginPath();p.forEach(([y,w],n)=>n?g.lineTo(cx+w,y):g.moveTo(cx+w,y));for(let n=p.length-1;n>=0;n--)g.lineTo(cx-p[n][1],p[n][0]);
       g.closePath();g.fillStyle=t.c;g.shadowColor=t.c;g.shadowBlur=5;g.fill();g.shadowBlur=0;seg=[]};
     curBins.forEach(b=>{
@@ -415,6 +434,11 @@ function draw(){
     flush();
   });
   marks.forEach(([x,y,n])=>{g.beginPath();g.arc(x,y,Math.min(7,2.5+1.5*Math.sqrt(n)),0,7);g.fillStyle='#F0605D';g.fill();g.strokeStyle='#1B2832';g.lineWidth=1.5;g.stroke()});
+  if(nowY){const y=nowY; // the pen: a thin line across the paper at the current moment
+    g.strokeStyle='rgba(242,240,230,.75)';g.lineWidth=1;g.beginPath();g.moveTo(4,y);g.lineTo(W,y);g.stroke();
+    g.fillStyle='#F2F0E6';g.beginPath();g.moveTo(gut-2,y);g.lineTo(gut-8,y+4);g.lineTo(gut-8,y-4);g.fill(); // arrowhead pointing at the line
+    g.textAlign='left';g.textBaseline='top';g.font='600 12px '+F;g.fillText('now',6,y+4)}
+  g.restore();
   $('harmBar').style.width=(harmony*100).toFixed(0)+'%';
   inspect(rb);
   $('feedHead').textContent=`Cut a sensor feed for ${dropLen()} min`+(speed>60?` (about 10 s at ×${speed})`:'');
@@ -451,7 +475,7 @@ function inspect(b){
 }
 function pick(e){
   if(!geo||!geo.nb)return;const r=$('mud').getBoundingClientRect();
-  const i=Math.max(0,Math.min(geo.nb-1,geo.nb-1-Math.floor((e.clientY-r.top-geo.top)/geo.rowH)));
+  const k=Math.floor((e.clientY-r.top-geo.top+geo.off)/geo.rowH),i=Math.max(0,Math.min(geo.nb-1,oldTop?k:geo.nb-1-k));
   selMin=i*binMin;dirty=true;
 }
 let dragging=false;
@@ -460,6 +484,11 @@ $('mud').onpointermove=e=>{if(dragging)pick(e)};
 $('mud').onpointerup=()=>dragging=false;
 $('live').onclick=$('logResume').onclick=()=>{selMin=null;dirty=true};
 $('bin').onchange=e=>{binMin=+e.target.value;dirty=true};
+const setOrder=v=>{oldTop=v;dirty=true;const b=$('order'),w=oldTop?'bottom':'top';b.setAttribute('aria-pressed',oldTop);
+  b.title=`Newest readings are at the ${w}. Click to put the ${oldTop?'newest':'oldest'} on top instead.`;$('mud').ariaLabel='Five measurement threads over time, newest at '+w;
+  try{localStorage.setItem('soundscape-order',oldTop?'old':'new')}catch(e){}};
+$('order').onclick=()=>setOrder(!oldTop);
+{let v=true;try{v=localStorage.getItem('soundscape-order')!=='new'}catch(e){}setOrder(v)}
 $('alarmsOnly').onchange=e=>$('events').classList.toggle('ao',e.target.checked);
 $('events').onclick=e=>{const tr=e.target.closest('tr');if(tr){selMin=+tr.dataset.m;dirty=true}};
 new ResizeObserver(()=>dirty=true).observe($('stage'));
@@ -475,19 +504,21 @@ function drawIntroStrip(){ // an illustrative slice of recorder paper: a calm st
   c.width=W*dpr;c.height=H*dpr;const g=c.getContext('2d');g.scale(dpr,dpr);
   const F='"Barlow Semi Condensed",Barlow,sans-serif',n=Math.ceil(H/3),top=18,colW=(W-24)/5,cx=j=>12+colW*(j+.5);
   const noise=(i,j)=>.78+.16*Math.sin(i*.045+j*2.3)+.1*Math.sin(i*.13+j*4.1)+.05*Math.sin(i*.41+j*1.7); // slow drift, small flutter
-  const stopAt=[.16,.27]; // fraction of the strip (from the top, newest) where the lines are stopped
+  const stopAt=[.66,.77],nowAt=.9; // fractions of the strip (oldest at the top) where the lines stop, and where the pen is now
   g.lineWidth=1;for(let y=top;y<H;y+=36){g.strokeStyle=(y-top)%108?'#21303B':'#2E414E';g.beginPath();g.moveTo(0,y+.5);g.lineTo(W,y+.5);g.stroke()}
   TH.forEach((t,j)=>{const base=[.8,.78,.74,.7,.3][j];g.beginPath();const pts=[];
-    for(let i=0;i<n;i++){const y=top+i*3,f=(y-top)/(H-top),stop=f>stopAt[0]&&f<stopAt[1];
-      let w=base*noise(i,j);if(stop&&(j===1||j===2))w=.02;if(stop&&j===4)w=base*1.8;if(j===3&&f<stopAt[1])w*=.75;pts.push([y,Math.max(.6,w*colW*.46)])}
+    for(let i=0;i<n;i++){const y=top+i*3,f=(y-top)/(H-top);if(f>nowAt)break;const stop=f>stopAt[0]&&f<stopAt[1];
+      let w=base*noise(i,j);if(stop&&(j===1||j===2))w=.02;if(stop&&j===4)w=base*1.8;if(j===3&&f>stopAt[0])w*=.75;pts.push([y,Math.max(.6,w*colW*.46)])}
     pts.forEach(([y,w],i)=>i?g.lineTo(cx(j)+w,y):g.moveTo(cx(j)+w,y));for(let i=pts.length-1;i>=0;i--)g.lineTo(cx(j)-pts[i][1],pts[i][0]);
     g.closePath();g.fillStyle=t.c;g.globalAlpha=.9;g.fill();g.globalAlpha=1});
   const yStop=top+(H-top)*stopAt[0];[[1,0],[2,6],[2,18]].forEach(([j,d])=>{g.beginPath();g.arc(cx(j)+8,yStop+d,3.2,0,7);g.fillStyle='#F0605D';g.fill()});
   const note=(y,lines,col)=>{g.font='500 13px '+F;const w=Math.max(...lines.map(l=>g.measureText(l).width))+14,h=lines.length*16+8,x=W-w-8;
     g.fillStyle='rgba(22,33,42,.92)';g.fillRect(x,y,w,h);g.fillStyle=col;g.fillRect(x,y,2,h);g.fillStyle='#E4E8E3';g.textBaseline='top';lines.forEach((l,i)=>g.fillText(l,x+9,y+5+i*16))};
-  note(top+(H-top)*.2,['Lines stopped:','threads pinch,','a drone rises'],'#F0605D');
-  note(top+(H-top)*.62,['A calm hour:','even threads,','music in key'],'#9CCB6B');
-  g.fillStyle='#82939A';g.font='400 11px '+F;g.textAlign='left';g.fillText('newest',8,4);
+  note(top+(H-top)*.6,['Lines stopped:','threads pinch,','a drone rises'],'#F0605D');
+  note(top+(H-top)*.12,['A calm hour:','even threads,','music in key'],'#9CCB6B');
+  g.fillStyle='#82939A';g.font='400 11px '+F;g.textAlign='left';g.textBaseline='top';g.fillText('earlier',8,4);
+  const yNow=Math.round(top+(H-top)*nowAt)+.5;g.strokeStyle='rgba(242,240,230,.75)';g.beginPath();g.moveTo(0,yNow);g.lineTo(W,yNow);g.stroke();
+  g.fillStyle='#F2F0E6';g.font='600 12px '+F;g.fillText('now',8,yNow+4);
 }
 // right-panel drawers: one open at a time so the chosen one gets the whole column; remembered per browser
 const drawers=[...document.querySelectorAll('.drawer')];

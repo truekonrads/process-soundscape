@@ -76,13 +76,15 @@ Every voice has its own volume slider under **Sound mix**, and your settings are
 
 A hairline is a measured zero and a dashed line means **no data**. Can you tell the difference by ear?
 
+The paper grows downwards like a log, oldest at the top, with a thin white line marking *now*. Press **⇅ Flip** in the chart's top-left corner to put the newest readings on top instead.
+
 ## Things to try
 
 - **Stop lines 10 min:** the belts halt, QA runs dry, supplies pile up, and harmony drops within a couple of minutes.
 - **QA reject spike:** knocks start sounding and the reject pile grows on camera.
 - **Delay pickup 30 min:** the dock closes, trucks pile up in the yard and the wind rises.
 - **Cut a sensor feed:** the factory keeps running, but you lose that measurement on the chart, in the sound and on camera.
-- **Event rates and homeostasis:** change how often things go wrong. Switch off the automatic balancing (homeostasis) and see whether the factory recovers on its own.
+- **Manual control:** flip the switch from *Homeostasis* to *Manual* to turn off the automatic balancing and see whether the factory recovers on its own. The sliders below it change how often things go wrong.
 - **Replay day:** re-runs the same day with the same random seed and your disruptions, so you can compare runs fairly.
 - **Spiral view:** an alternative visualisation where each day coils outwards, oldest at the centre. The link is at the bottom of the right-hand column.
 
