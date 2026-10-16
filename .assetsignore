@@ -1,0 +1,9 @@
+# Publish only the site's static files, never docs or repository/tooling files.
+*
+!index.html
+!spiral.html
+!core.js
+!cctv.js
+!favicon.svg
+!apple-touch-icon.png
+!og.png

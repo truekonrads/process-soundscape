@@ -20,7 +20,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:creator" content="@truekonrads">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
 <style>
 :root{
   --ground:#16212A;--strip:#1B2832;--rule:#273743;--rule-soft:#21303B;
@@ -40,7 +40,7 @@ button,select,input{font:inherit;color:inherit}
 ::-webkit-scrollbar-thumb:hover{background-color:var(--mute)}
 
 /* header: name · clock & harmony · transport · sound */
-header{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:24px;padding:10px 20px;border-bottom:1px solid var(--rule)}
+header{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:24px;padding:10px 64px 10px 20px;border-bottom:1px solid var(--rule)}
 .brand{font:600 19px/1 var(--label)}
 .brand small{display:block;font:400 13px var(--ui);color:var(--mute);margin-top:4px}
 .transport,.sound{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -114,12 +114,35 @@ table{width:100%;border-collapse:collapse}
 #secDist h3.sub{margin:16px 0 4px;font:600 14px var(--label);color:var(--ink)}
 #secDist button.feed{border-style:dashed;font-weight:400}
 #secDist button.feed.on{background:rgba(240,96,93,.16);border-style:solid;border-color:var(--rosehip);color:var(--ink)}
+#secDist .dbody .hint:first-child{margin-top:0}
 #secDist button[data-a]{border-color:rgba(240,96,93,.55)}#secDist button[data-a]:hover{border-color:var(--rosehip)}
 #mud{width:100%;height:100%;display:block;touch-action:none;cursor:row-resize}
 
 aside{overflow-y:scroll;min-height:0;border-left:1px solid var(--rule)}
 aside section{padding:14px 18px 16px;border-bottom:1px solid var(--rule)}
 aside section>.colhead{padding:0 0 10px}
+/* drawers: shaded header bars that stack; on desktop the column is a fixed-height accordion so every title stays on screen */
+aside section.drawer{padding:0;border-bottom:0;border-top:2px solid #0E161C} /* dark gap between drawers */
+.drawer>.colhead{padding:0 18px 0 0;min-height:42px;background:#1F2E39;box-shadow:inset 0 1px 0 #3A4F5F;gap:10px} /* light top edge on each bar */
+.drawer h2{flex:1;min-width:0;align-self:stretch;display:flex}
+.dtog{display:flex;align-items:center;gap:10px;width:100%;padding:0 0 0 18px;border:0;border-radius:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.dtog span{flex:none}
+.dtog small{flex:1;min-width:0;font:400 13px var(--label);color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dtog::after{content:'';flex:none;width:7px;height:7px;margin:0 2px 0 auto;border:solid var(--mute);border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+.drawer.open .dtog::after{transform:translateY(2px) rotate(-135deg)}
+.drawer>.colhead:hover{background:#21323E}.dtog:hover::after{border-color:var(--ink)}
+.drawer:not(.open) .colhead>:not(h2),.drawer.open .dtog small{display:none}
+.drawer.open>.colhead{border-bottom:1px solid var(--rule)}
+.dbody{padding:12px 18px 16px}
+.dbody .note{padding:0}
+@media(prefers-reduced-motion:reduce){.dtog::after{transition:none}}
+@media(min-width:1101px){
+  aside{display:flex;flex-direction:column;overflow:hidden}
+  .drawer{flex:none;display:flex;flex-direction:column;min-height:0}
+  .drawer.open{flex:1 1 0;min-height:150px}
+  .drawer .dbody{flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable}
+  aside .credit{flex:none;margin:auto 0 0;padding:10px 18px 12px;border-top:1px solid var(--rule)}
+}
 .row{display:flex;flex-wrap:wrap;gap:6px}
 #vals td{padding:3px 0;font-size:14px}#vals td:not(:first-child){text-align:right;font-family:var(--label)}
 #vals .when{font:500 14px var(--label);color:var(--ink-2);padding-bottom:6px;text-align:left}
@@ -139,6 +162,12 @@ aside section>.colhead{padding:0 0 10px}
 .lineinst{display:grid;gap:6px;margin-top:4px}.lineinst>span{color:var(--ink);font:400 14px var(--ui)}
 .lineinst label{justify-content:space-between}.lineinst select{width:150px}
 
+/* GitHub corner (small octocat triangle, top right) */
+.gh-corner{position:fixed;top:0;right:0;z-index:5;width:56px;height:56px;color:var(--ground)}
+.gh-corner svg{width:100%;height:100%;fill:var(--ink-2);display:block}.gh-corner:hover svg{fill:var(--lamp)}
+.gh-corner:hover .octo-arm{animation:octo-wave 560ms ease-in-out}
+@keyframes octo-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}
+@media(prefers-reduced-motion:reduce){.gh-corner:hover .octo-arm{animation:none}}
 /* mobile explainer (stands in for the intro dialog on small screens) */
 #tip{display:none;padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--strip);font-size:14px;color:var(--ink-2)}
 #tip p{margin:0 0 8px}#tip b{color:var(--ink);font-weight:600}
@@ -160,7 +189,9 @@ aside section>.colhead{padding:0 0 10px}
   html,body{height:100%;overflow:hidden}
   body{display:flex;flex-direction:column;height:100dvh}
   #tip{display:block;flex:none}
-  header{display:flex;flex-wrap:wrap;gap:8px 10px;padding:8px 16px;flex:none}
+  header{display:flex;flex-wrap:wrap;gap:8px 10px;padding:8px 48px 8px 16px;flex:none}
+  #tip{padding-right:48px}
+  .gh-corner{width:42px;height:42px}
   .brand,#restart{display:none} /* the explainer names the page; Start turns into Replay at 18:00 */
   .readout{flex:1 0 100%;justify-content:space-between;gap:12px}
   #clock{font-size:24px}
@@ -181,12 +212,32 @@ dialog p,dialog li{color:var(--ink-2);max-width:62ch}dialog p{margin:0 0 12px}di
 dialog b{color:var(--ink);font-weight:600}
 dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
 #introSound{background:var(--lamp);color:var(--ground);border-color:var(--lamp)}
+/* intro: a short illustrated welcome. A slice of recorder paper teaches how to read the chart; serif prose invites reading. */
+#intro{--serif:'Newsreader',Georgia,serif;max-width:1000px;width:calc(100% - 48px);max-height:calc(100dvh - 32px);padding:0;overflow:hidden}
+#intro[open]{display:grid;grid-template-columns:230px minmax(0,1fr)}
+.intro-strip{position:relative;background:var(--strip);border-right:1px solid var(--rule);min-height:0}
+.intro-strip canvas{position:absolute;inset:0;width:100%;height:100%}
+.intro-body{padding:26px 34px 22px;overflow:auto;min-height:0}
+#intro h2{font:600 36px/1.1 var(--label);letter-spacing:-.01em;margin:0 0 10px}
+#intro p,#intro dd{font-family:var(--serif);color:var(--ink-2)}
+#intro .lead{font-size:17px;line-height:1.5;max-width:64ch;margin:0 0 18px}
+#intro dl{display:grid;grid-template-columns:1fr 1fr;gap:12px 34px;margin:0 0 16px}
+#intro dt{font:600 16px var(--label);color:var(--ink)}
+#intro dd{margin:2px 0 0;font-size:15px;line-height:1.5}
+#intro dd i,#intro .lead i{color:var(--ink)}
+#intro .compare{border-top:1px solid var(--rule);padding-top:14px;margin:0 0 16px}
+#intro .compare p{margin:0;font-size:15px;line-height:1.5;max-width:none}
+#intro .compare q{display:block;margin-top:4px;font:italic 400 20px/1.35 var(--serif);color:var(--ink);quotes:none}
+#intro .foot{display:flex;align-items:center;gap:20px}
+#intro .foot p{margin:0;font:400 14px/1.45 var(--ui);color:var(--mute);flex:1}#intro .foot .row{margin:0;flex:none}
+@media(max-width:860px){#intro[open]{grid-template-columns:1fr}.intro-strip{display:none}#intro dl{grid-template-columns:1fr}#intro .foot{flex-direction:column;align-items:stretch}#intro h2{font-size:30px}}
 .pulse{animation:pulse 1.2s ease-in-out 4}
 @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(242,213,138,.3)}}
 @media(prefers-reduced-motion:reduce){.pulse{animation:none}#harmBar{transition:none}}
 </style>
 </head>
 <body>
+<a href="https://github.com/truekonrads/process-soundscape" class="gh-corner" title="Clone me on GitHub" aria-label="Clone me on GitHub"><svg viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin:130px 106px" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor"/></svg></a>
 <div id="tip" role="region" aria-label="About this page">
   <p><b>Factory pulse</b> turns a simulated factory day into sound and a chart recorder. Harmonious music means it's running fine; discordant means something's off.</p>
   <p>Each coloured thread is one measurement (wider means more, newest at the top); red dots are alarms. Tap the chart to read a moment. Then break something with the buttons under the chart and listen, or switch to <b>CCTV</b> to watch the floor. Headphones help.</p>
@@ -223,8 +274,9 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
       <div class="row"><button id="sumClose">Close</button><button id="sumReplay">Replay with a disruption</button></div></div>
   </div>
   <aside>
-    <section id="secDist">
-      <div class="colhead"><h2>Cause a disruption</h2></div>
+    <section class="drawer" id="secDist">
+      <div class="colhead"><h2><button class="dtog" aria-expanded="true" aria-controls="secDistBody" title="Stop the lines, spike QA rejects, delay pickups or cut a sensor feed."><span>Cause a disruption</span><small>break something</small></button></h2></div>
+      <div class="dbody" id="secDistBody">
       <p class="hint">Break something, then watch the threads and listen for the music turning discordant.</p>
       <div class="row">
         <button data-a="stop">Stop lines 10 min</button><button data-a="qa">QA reject spike</button>
@@ -238,38 +290,57 @@ dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
         <button data-a="drop" data-k="warehouse" class="feed">Warehouse stock</button><button data-a="drop" data-k="trucksWaiting" class="feed">Trucks waiting</button>
       </div>
       <ol id="log"></ol>
+      </div>
     </section>
     <section id="secView" hidden><div class="colhead"><h2>Playback</h2></div><div class="row" id="viewCtl"></div></section>
-    <section>
-      <div class="colhead"><h2>Selected slice</h2><button id="live">Follow live</button></div>
-      <table id="vals"></table>
-      <button id="replaySel">▶ Hear 15 min from here</button>
+    <section class="drawer" id="drSlice">
+      <div class="colhead"><h2><button class="dtog" aria-expanded="false" aria-controls="drSliceBody" title="Exact values for any moment you pick on the chart, and a 15-minute listen."><span>Selected slice</span><small>values for any moment</small></button></h2><button id="live">Follow live</button></div>
+      <div class="dbody" id="drSliceBody">
+        <table id="vals"></table>
+        <button id="replaySel">▶ Hear 15 min from here</button>
+      </div>
     </section>
-    <section>
-      <div class="colhead"><h2>Event rates</h2><label><input type="checkbox" id="homeo" checked>Homeostasis</label></div>
-      <div id="rates"></div>
+    <section class="drawer" id="drRates">
+      <div class="colhead"><h2><button class="dtog" aria-expanded="false" aria-controls="drRatesBody" title="How often things go wrong, and whether the factory corrects itself."><span>Event rates</span><small>how often things go wrong</small></button></h2><label><input type="checkbox" id="homeo" checked>Homeostasis</label></div>
+      <div class="dbody" id="drRatesBody">
+        <div id="rates"></div>
+      </div>
     </section>
-    <section>
-      <div class="colhead"><h2>Sound mix</h2><button id="mixReset">Reset</button></div>
-      <div id="mix"></div>
+    <section class="drawer" id="drMix">
+      <div class="colhead"><h2><button class="dtog" aria-expanded="false" aria-controls="drMixBody" title="Volume for each sound, and an instrument for each production line."><span>Sound mix</span><small>volumes and instruments</small></button></h2><button id="mixReset">Reset</button></div>
+      <div class="dbody" id="drMixBody">
+        <div id="mix"></div>
+      </div>
     </section>
-    <p class="note">Width is the measured value on a fixed scale: rates are per-minute averages, stocks the maximum in each bin. A hairline is a measured zero; a dashed line means no data. Red dots count alarm events. Colour only identifies the thread.</p>
+    <section class="drawer" id="drNote">
+      <div class="colhead"><h2><button class="dtog" aria-expanded="false" aria-controls="drNoteBody" title="What the widths, hairlines, dashes and dots on the chart mean."><span>Reading the chart</span><small>widths, gaps and dots</small></button></h2></div>
+      <div class="dbody" id="drNoteBody">
+        <p class="note">Width is the measured value on a fixed scale: rates are per-minute averages, stocks the maximum in each bin. A hairline is a measured zero; a dashed line means no data. Red dots count alarm events. Colour only identifies the thread.</p>
+      </div>
+    </section>
     <p class="credit"><a href="spiral.html">Spiral view</a> · Vibe coded by <a href="https://x.com/truekonrads" target="_blank" rel="noopener">@truekonrads</a></p>
   </aside>
 </main>
-<dialog id="intro">
-  <h2>Hear and see how the factory is running</h2>
-  <p>This is a simulated factory day: materials arrive, three assembly lines build products, QA inspects them, and trucks collect them from the warehouse.</p>
-  <p>Rather than reading numbers, let your own pattern recognition do the work. After a while you'll know what a normal day looks and sounds like, and notice when something changes.</p>
-  <ul>
-    <li><b>Listen.</b> Roughly harmonious, flowing music means things are fine. Discordant, off-key or off-beat sound means something isn't quite right.</li>
-    <li><b>Look.</b> Each coloured thread is one measurement; wider means more. Newest is at the top. Red dots are alarms.</li>
-    <li><b>Read the harmony.</b> <i>Flow harmony</i> in the top bar sums it up: 1.00 means everything flows, and it falls as lines run short of materials, trucks queue up or QA rejects rise.</li>
-    <li><b>Break things.</b> Use <i>Cause a disruption</i> on the right, change event rates, and switch homeostasis off to see whether the factory recovers on its own.</li>
-    <li><b>Compare.</b> Open the <b>CCTV</b> panel at the bottom left to watch cartoon cameras of the factory floor, with alarms flashing as they happen. Try the same disruption both ways: watching the cameras, then just listening and following the chart and event log. Which tells you sooner that something's wrong, and what it is?</li>
-  </ul>
-  <p>Sound stays off until you choose <b>Turn sound on</b> in the top bar. Headphones help: the sound pans left to right along the flow.</p>
-  <div class="row"><button id="introClose">Close</button><button id="introSound">Turn sound on and start</button></div>
+<dialog id="intro" aria-labelledby="introTitle">
+  <div class="intro-strip" aria-hidden="true"><canvas id="introStrip"></canvas></div>
+  <div class="intro-body">
+    <h2 id="introTitle">A factory day you can hear</h2>
+    <p class="lead">This is a simulated factory. Materials arrive, three assembly lines build products, QA inspects them and trucks carry them away. Instead of reading numbers, you'll learn what a normal day sounds and looks like, and you'll notice when it changes, often before you could say why.</p>
+    <dl>
+      <div><dt>Listen</dt><dd>Calm, in-key music means the factory is flowing. When it drifts off key or off the beat, something isn't right.</dd></div>
+      <div><dt>Look</dt><dd>Each coloured thread is one measurement, newest at the top. Wider means more; red dots are alarms.</dd></div>
+      <div><dt>Read the harmony</dt><dd>The score in the top bar sums it up, from 1.00 when everything flows to 0.00 when it's stuck. The line beneath names the likely cause.</dd></div>
+      <div><dt>Break things</dt><dd>Use <i>Cause a disruption</i> on the right, change event rates, or switch homeostasis off and see if the factory recovers on its own.</dd></div>
+    </dl>
+    <div class="compare">
+      <p>Then open <i>CCTV</i> at the bottom left and try the same disruption again, this time watching cartoon cameras of the factory floor.</p>
+      <q>Which tells you sooner that something's wrong, and what it is: the cameras, or your ears and the chart?</q>
+    </div>
+    <div class="foot">
+      <p>Sound stays off until you turn it on. Headphones help: it pans left to right along the flow.</p>
+      <div class="row"><button id="introClose">Start without sound</button><button id="introSound">Turn sound on and start</button></div>
+    </div>
+  </div>
 </dialog>
 <dialog id="cctvDlg" aria-label="CCTV view of the factory floor">
   <div class="colhead"><h2>CCTV · factory floor</h2><span>Click anywhere or press Esc to close</span><button id="cctvClose" aria-label="Close CCTV">✕ Close</button></div>
@@ -399,6 +470,31 @@ const dismissTip=()=>{$('tip').hidden=true;try{localStorage.setItem('soundscape-
 try{if(localStorage.getItem('soundscape-tip'))$('tip').hidden=true}catch(e){}
 $('tipClose').onclick=dismissTip;
 $('tipSound').onclick=()=>{dismissTip();startWithSound()};
+function drawIntroStrip(){ // an illustrative slice of recorder paper: a calm stretch, then the lines stop
+  const c=$('introStrip'),dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;if(!W||!H)return;
+  c.width=W*dpr;c.height=H*dpr;const g=c.getContext('2d');g.scale(dpr,dpr);
+  const F='"Barlow Semi Condensed",Barlow,sans-serif',n=Math.ceil(H/3),top=18,colW=(W-24)/5,cx=j=>12+colW*(j+.5);
+  const noise=(i,j)=>.78+.16*Math.sin(i*.045+j*2.3)+.1*Math.sin(i*.13+j*4.1)+.05*Math.sin(i*.41+j*1.7); // slow drift, small flutter
+  const stopAt=[.16,.27]; // fraction of the strip (from the top, newest) where the lines are stopped
+  g.lineWidth=1;for(let y=top;y<H;y+=36){g.strokeStyle=(y-top)%108?'#21303B':'#2E414E';g.beginPath();g.moveTo(0,y+.5);g.lineTo(W,y+.5);g.stroke()}
+  TH.forEach((t,j)=>{const base=[.8,.78,.74,.7,.3][j];g.beginPath();const pts=[];
+    for(let i=0;i<n;i++){const y=top+i*3,f=(y-top)/(H-top),stop=f>stopAt[0]&&f<stopAt[1];
+      let w=base*noise(i,j);if(stop&&(j===1||j===2))w=.02;if(stop&&j===4)w=base*1.8;if(j===3&&f<stopAt[1])w*=.75;pts.push([y,Math.max(.6,w*colW*.46)])}
+    pts.forEach(([y,w],i)=>i?g.lineTo(cx(j)+w,y):g.moveTo(cx(j)+w,y));for(let i=pts.length-1;i>=0;i--)g.lineTo(cx(j)-pts[i][1],pts[i][0]);
+    g.closePath();g.fillStyle=t.c;g.globalAlpha=.9;g.fill();g.globalAlpha=1});
+  const yStop=top+(H-top)*stopAt[0];[[1,0],[2,6],[2,18]].forEach(([j,d])=>{g.beginPath();g.arc(cx(j)+8,yStop+d,3.2,0,7);g.fillStyle='#F0605D';g.fill()});
+  const note=(y,lines,col)=>{g.font='500 13px '+F;const w=Math.max(...lines.map(l=>g.measureText(l).width))+14,h=lines.length*16+8,x=W-w-8;
+    g.fillStyle='rgba(22,33,42,.92)';g.fillRect(x,y,w,h);g.fillStyle=col;g.fillRect(x,y,2,h);g.fillStyle='#E4E8E3';g.textBaseline='top';lines.forEach((l,i)=>g.fillText(l,x+9,y+5+i*16))};
+  note(top+(H-top)*.2,['Lines stopped:','threads pinch,','a drone rises'],'#F0605D');
+  note(top+(H-top)*.62,['A calm hour:','even threads,','music in key'],'#9CCB6B');
+  g.fillStyle='#82939A';g.font='400 11px '+F;g.textAlign='left';g.fillText('newest',8,4);
+}
+// right-panel drawers: one open at a time so the chosen one gets the whole column; remembered per browser
+const drawers=[...document.querySelectorAll('.drawer')];
+const showDrawer=id=>{drawers.forEach(d=>{const o=d.id===id;d.classList.toggle('open',o);d.querySelector('.dtog').setAttribute('aria-expanded',o);d.querySelector('.dbody').hidden=!o});
+  try{localStorage.setItem('soundscape-drawer',id)}catch(e){}};
+drawers.forEach(d=>d.querySelector('.dtog').onclick=()=>showDrawer(d.classList.contains('open')?'':d.id)); // clicking the open one closes it
+{let id='secDist';try{const v=localStorage.getItem('soundscape-drawer');if(v===''||(v&&$(v)))id=v}catch(e){}showDrawer(id)}
 // Chart / CCTV tabs; the choice is remembered per browser
 // CCTV: on desktop a live thumbnail under the event log that opens into an overlay; on smaller screens a tab beside the chart.
 // One canvas moves between the three places.
@@ -418,7 +514,7 @@ $('cctvDlg').addEventListener('close',placeCctv);
 wide.addEventListener('change',placeCctv);placeCctv();
 $('sumClose').onclick=()=>$('summary').hidden=true;
 $('sumReplay').onclick=()=>{$('restart').onclick();$('summary').hidden=true;
-  $('secDist').scrollIntoView({block:'nearest',behavior:'smooth'});
+  showDrawer('secDist');$('secDist').scrollIntoView({block:'nearest',behavior:'smooth'});
   document.querySelectorAll('#secDist button').forEach(b=>{b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse')})};
 // iPhones mute Web Audio when the silent switch is on, which looks like a broken page
 const iOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -430,7 +526,7 @@ const narrow=matchMedia('(max-width:700px)');
 const placeControls=()=>{(narrow.matches?$('viewCtl'):document.querySelector('.transport')).append($('speedLab'),$('binLab'));$('secView').hidden=!narrow.matches};
 narrow.addEventListener('change',placeControls);placeControls();
 if(narrow.matches)$('play').onclick(); // start silently so the chart isn't empty; sound stays opt-in
-else $('intro').showModal(); // phones get the inline explainer instead
+else{$('intro').showModal();drawIntroStrip();document.fonts?.ready.then(drawIntroStrip)} // phones get the inline explainer instead
 </script>
 </body>
 </html>

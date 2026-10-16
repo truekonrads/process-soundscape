@@ -106,7 +106,7 @@ function qa(g,s){ // QA: an inspector stamps each unit; rejects get tossed onto 
     if(it.ph==='out'&&it.x<215){g.fillStyle=K.ok;g.font='700 12px sans-serif';g.textAlign='center';g.fillText('✓',it.x+5,84)}
   });
   if(chk&&chk.rej&&T-chk.t>.2){g.fillStyle=K.red;g.font='700 14px sans-serif';g.textAlign='center';g.fillText('✗',168,52)}
-  if(!s.valid||s.valid.qaRejected!==false)return;sign(g,275,88,'REJECT COUNT: NO DATA',K.mute,K.line);
+  if(s.valid&&s.valid.qaRejected===false)sign(g,275,88,'REJECT COUNT: NO DATA',K.mute,K.line);
 }
 function wh(g,s){ // warehouse: racks fill with finished goods; a forklift shuttles while goods move
   room(g,26);
@@ -173,8 +173,8 @@ function update(dt,s){
   const Y=S.yd;Y.arr=Y.arr.filter(a=>T-a.t0<1.4);Y.dep=Y.dep.filter(d=>T-d.t0<2);
 }
 
-// ---- frame: lay out the camera grid, draw each feed, then the CCTV overlay ----
 function noise(g,w,h){for(let i=0;i<260;i++){const v=Math.random()*120|0;g.fillStyle=`rgb(${v},${v},${v})`;g.fillRect(Math.random()*w,Math.random()*h,2+Math.random()*10,2)}}
+// ---- frame: lay out the camera grid, draw each feed, then the CCTV overlay ----
 function frame(ts){
   if(!on)return;requestAnimationFrame(frame);
   const dt=last?Math.min(.1,(ts-last)/1000):0;last=ts;
@@ -190,9 +190,9 @@ function frame(ts){
   const sec=Math.floor((simT%1)*60),stamp=hhmm(Math.floor(Math.min(simT,DAY-1/60)))+':'+String(sec).padStart(2,'0');
   for(let i=0;i<6;i++){const x=ox+(i%cols)*(cw+gap),y=oy+Math.floor(i/cols)*(ch+gap);
     g.save();g.beginPath();g.rect(x,y,cw,ch);g.clip();g.translate(x,y);
-    if(i<5){const cam=CAMS[i],sig=!s.valid||s.valid[cam.k]!==false;
+    if(i<5){const cam=CAMS[i],sig=!s.valid||s.valid[cam.k]!==false; // cutting an area's sensor feed also takes its camera down
       g.save();g.scale(cw/320,ch/180);if(sig)SCENES[cam.id](g,s);else{g.fillStyle='#1B2329';g.fillRect(0,0,320,180)}g.restore();
-      if(!sig){noise(g,cw,ch);g.fillStyle='rgba(14,22,28,.75)';g.fillRect(cw/2-60,ch/2-14,120,28);g.fillStyle=K.ink;g.font='600 14px "Barlow Semi Condensed",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('NO SIGNAL',cw/2,ch/2)}
+      if(!sig){noise(g,cw,ch);const f=mini?11:14;g.fillStyle='rgba(14,22,28,.75)';g.fillRect(cw/2-f*4.3,ch/2-f,f*8.6,f*2);g.fillStyle=K.ink;g.font=`600 ${f}px "Barlow Semi Condensed",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('NO SIGNAL',cw/2,ch/2)}
       const vg=g.createRadialGradient(cw/2,ch/2,ch*.35,cw/2,ch/2,cw*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.45)');g.fillStyle=vg;g.fillRect(0,0,cw,ch);
       g.fillStyle='rgba(0,0,0,.07)';for(let yy=0;yy<ch;yy+=3)g.fillRect(0,yy,cw,1); // scanlines
       const f=mini?8:cw<230?10:11;g.font=`600 ${f}px ui-monospace,Consolas,monospace`;g.textBaseline='top';
