@@ -3,105 +3,256 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Operations Mudlog</title>
+<title>Factory pulse</title>
+<meta name="description" content="A simulated factory day as an ambient soundscape and a live chart recorder. Harmonious means it's running fine; discordant means something's off.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#16212A">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Factory pulse">
+<meta property="og:description" content="A factory day you can hear and see at a glance. Harmonious means it's running fine; discordant means something's off.">
+<meta property="og:url" content="https://soundscape.flaminghoops.dev/">
+<meta property="og:image" content="https://soundscape.flaminghoops.dev/og.png">
+<link rel="canonical" href="https://soundscape.flaminghoops.dev/">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Five coloured measurement threads flowing down a chart recorder strip, beside the title Factory pulse">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@truekonrads">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0f13;--panel:#141a1f;--ink:#d9e1e4;--mute:#7c8a90;--line:#232c33;--alarm:#ff4d5e;--sel:#f3d27a}
+:root{
+  --ground:#16212A;--strip:#1B2832;--rule:#273743;--rule-soft:#21303B;
+  --ink:#E4E8E3;--ink-2:#B5C0C2;--mute:#82939A;
+  --rosehip:#F0605D;--lamp:#F2D58A;
+  --ui:'Barlow',system-ui,sans-serif;--label:'Barlow Semi Condensed','Barlow',system-ui,sans-serif;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,sans-serif}
-header{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
-header a{color:var(--mute);margin-left:auto}
-button,select{background:#1d252b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 9px;font:inherit;cursor:pointer}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.45 var(--ui);font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+
+/* header: name · clock & harmony · transport · sound */
+header{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:24px;padding:10px 20px;border-bottom:1px solid var(--rule)}
+.brand{font:600 19px/1 var(--label)}
+.brand small{display:block;font:400 13px var(--ui);color:var(--mute);margin-top:4px}
+.transport,.sound{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.readout{display:flex;align-items:center;gap:16px;justify-self:center}
+#clock{font:500 32px/1 var(--label);min-width:4.6ch}
+.harmony{display:grid;gap:4px;width:210px}
+#harm{display:flex;align-items:center;gap:6px;font:400 13px var(--label);color:var(--ink-2);white-space:nowrap}
+#harmHelp{width:18px;height:18px;padding:0;border-radius:50%;font:600 11px/1 var(--label);color:var(--mute);flex:none}
+#harmInfo{max-width:min(380px,calc(100% - 32px));background:var(--ground);color:var(--ink-2);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;font-size:14px}
+#harmInfo p{margin:0 0 8px}#harmInfo b{color:var(--ink);font-weight:600}#harmInfo::backdrop{background:rgba(10,16,21,.5)}
+.meter{height:4px;background:var(--rule);border-radius:2px;overflow:hidden}
+#harmBar{height:100%;width:100%;background:var(--ink-2);transition:width .6s}
+#telem{font:500 13px var(--label);color:var(--lamp)}
+#telem:empty{display:none}
+
+button{background:transparent;border:1px solid var(--rule);border-radius:4px;padding:6px 12px;cursor:pointer;font:500 14px var(--label)}
 button:hover{border-color:var(--mute)}
-label{color:var(--mute);display:flex;gap:4px;align-items:center}
-main{display:grid;grid-template-columns:340px minmax(0,1fr) 260px;gap:12px;padding:12px 16px;height:calc(100vh - 52px)}
-@media(max-width:900px){main{grid-template-columns:1fr;height:auto}#stage{height:75vh}#evcard{height:40vh}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:0}
-.card h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);display:flex;justify-content:space-between;align-items:center}
-#evcard{display:flex;flex-direction:column}
+#play{background:var(--ink);color:var(--ground);border-color:var(--ink);min-width:86px}
+#audioBtn{border-color:var(--lamp);color:var(--lamp);min-width:112px}
+select{background:var(--strip);border:1px solid var(--rule);border-radius:4px;padding:5px 6px;font:500 14px var(--label)}
+label{display:flex;align-items:center;gap:6px;color:var(--mute);font:400 14px var(--label)}
+input[type=range]{accent-color:var(--ink-2)}
+input[type=checkbox]{accent-color:var(--lamp)}
+
+/* three columns: log tape · recorder strip · control rail */
+main{display:grid;grid-template-columns:320px minmax(0,1fr) 290px;height:calc(100% - 64px)}
+main>*{min-width:0}
+#evcard{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--rule)}
+.colhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px 8px}
+h2{margin:0;font:600 15px var(--label);color:var(--ink)}
 #evwrap{overflow:auto;flex:1}
-table{width:100%;border-collapse:collapse;font-size:12px}
-#evwrap td{padding:3px 4px;border-bottom:1px solid var(--line);vertical-align:top}
-#evwrap td:first-child{font-family:ui-monospace,monospace;color:var(--mute)}
-#evwrap td:nth-child(2){color:var(--mute);white-space:nowrap}
-#events tr{cursor:pointer}#events tr:hover{background:#1b2329}
-#events tr.alarm td:last-child{color:var(--alarm)}
-#events tr.sel{background:rgba(243,210,122,.14)}
+table{width:100%;border-collapse:collapse}
+#events td{padding:5px 6px;border-top:1px solid var(--rule-soft);vertical-align:top;font-size:13px;color:var(--ink-2)}
+#events td:first-child{padding-left:16px;font-family:var(--label);color:var(--mute);width:48px}
+#events td:nth-child(2){font-family:var(--label);color:var(--mute);white-space:nowrap}
+#events tr{cursor:pointer}#events tr:hover{background:var(--strip)}
+#events tr.alarm td:last-child{color:var(--rosehip)}
+#events tr.sel{background:rgba(242,213,138,.12)}
 #events.ao tr:not(.alarm){display:none}
-#stage{min-height:0}
+#logResume{margin-left:auto;padding:3px 10px;border-color:var(--lamp);color:var(--lamp);font-size:13px}
+#stage{min-height:0;background:var(--strip);position:relative}
+#key{position:absolute;left:50px;right:0;bottom:0;padding:4px 8px;text-align:center;font:400 12px var(--label);color:var(--mute);background:rgba(27,40,50,.85);pointer-events:none}
+#key b{color:var(--rosehip);font-weight:400}
+#summary{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 32px));background:var(--ground);border:1px solid var(--rule);border-radius:6px;padding:18px 20px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#summary h2{font-size:18px;margin-bottom:8px}#summary p{margin:0 0 6px;color:var(--ink-2);font-size:14px}
+#summary .row{justify-content:flex-end;margin-top:12px}
+#sumReplay{background:var(--lamp);color:var(--ground);border-color:var(--lamp)}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);max-width:calc(100% - 32px);background:var(--ink);color:var(--ground);border-radius:6px;padding:10px 14px;font:500 14px var(--label);z-index:10}
+#secDist .hint{margin:0 0 10px;font-size:13px;color:var(--mute)}
+#secDist h3.sub{margin:16px 0 4px;font:600 14px var(--label);color:var(--ink)}
+#secDist button.feed{border-style:dashed;font-weight:400}
+#secDist button.feed.on{background:rgba(240,96,93,.16);border-style:solid;border-color:var(--rosehip);color:var(--ink)}
+#secDist button[data-a]{border-color:rgba(240,96,93,.55)}#secDist button[data-a]:hover{border-color:var(--rosehip)}
 #mud{width:100%;height:100%;display:block;touch-action:none;cursor:row-resize}
-aside{display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
-aside>*{flex-shrink:0}
-.rate{display:grid;grid-template-columns:1fr 46px;align-items:center;column-gap:8px;margin:2px 0 8px;color:var(--ink);font-size:13px}
-.rate input{grid-column:1/-1;width:100%;margin:2px 0 0}
-.rate b{grid-row:1;grid-column:2;text-align:right;font:12px ui-monospace,monospace;color:var(--mute)}
-.rate i{grid-column:1/-1;font-size:11px;color:var(--mute);font-style:normal;min-height:1em}
-aside button{font-size:13px}
+
+aside{overflow:auto;min-height:0;border-left:1px solid var(--rule)}
+aside section{padding:14px 18px 16px;border-bottom:1px solid var(--rule)}
+aside section>.colhead{padding:0 0 10px}
 .row{display:flex;flex-wrap:wrap;gap:6px}
-#clock{font:600 22px ui-monospace,monospace}
-#telem{font-size:12px;color:var(--sel);min-height:1em}
-#log{max-height:90px;overflow:auto;font-size:12px;color:var(--mute);margin:4px 0 0;padding-left:18px}
-#vals td{padding:2px 0}#vals td:not(:first-child){text-align:right;font-family:ui-monospace,monospace}
-small{color:var(--mute)}
-dialog{max-width:520px;width:calc(100% - 32px);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
-dialog::backdrop{background:rgba(0,0,0,.6)}
-dialog h2{margin:0 0 10px;font-size:20px}dialog p{margin:0 0 10px;color:#b9c4c8}dialog ul{margin:0 0 12px;padding-left:20px;color:#b9c4c8}
-dialog .row{justify-content:flex-end;margin-top:14px}
-.pulse{animation:pulse 1.2s ease-in-out 4;border-color:var(--sel)!important}
-@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(243,210,122,.35)}}
+#vals td{padding:3px 0;font-size:14px}#vals td:not(:first-child){text-align:right;font-family:var(--label)}
+#vals .when{font:500 14px var(--label);color:var(--ink-2);padding-bottom:6px;text-align:left}
+#vals .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px}
+#vals .al{color:var(--rosehip);width:3em}
+#vals .sub{color:var(--mute)}
+.rate{display:grid;grid-template-columns:1fr auto;align-items:baseline;column-gap:8px;margin:0 0 10px;color:var(--ink);font:400 14px var(--ui)}
+.rate input{grid-column:1/-1;width:100%;margin:4px 0 0}
+.rate b{grid-row:1;grid-column:2;font:500 14px var(--label);color:var(--ink-2)}
+.rate i{grid-column:1/-1;font:400 12px var(--label);color:var(--mute);font-style:normal;min-height:1em}
+#log{max-height:96px;overflow:auto;font:400 13px var(--label);color:var(--mute);margin:10px 0 0;padding-left:18px}
+#log:empty{display:none}
+.note{margin:0;padding:14px 18px;font-size:13px;color:var(--mute)}
+.credit{margin:0;padding:0 18px 18px;font:400 13px var(--label);color:var(--mute)}
+.credit a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--rule)}.credit a:hover{color:var(--ink)}
+#replaySel{margin-top:10px;width:100%}
+
+/* mobile explainer (stands in for the intro dialog on small screens) */
+#tip{display:none;padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--strip);font-size:14px;color:var(--ink-2)}
+#tip p{margin:0 0 8px}#tip b{color:var(--ink);font-weight:600}
+#tip .row{justify-content:flex-end}
+#tipSound{background:var(--lamp);color:var(--ground);border-color:var(--lamp)}
+#tip[hidden]{display:none!important}
+
+@media(max-width:1100px){
+  header{grid-template-columns:1fr auto;row-gap:10px}.readout{justify-self:start}
+  html,body{height:auto}
+  main{grid-template-columns:minmax(0,1fr);height:auto}#stage{order:-1;height:78svh}#evcard{height:45svh;border:0;border-top:1px solid var(--rule)}aside{border:0}
+  .harmony{min-width:0}
+  aside{display:contents} /* let the disturbance buttons sit right under the chart */
+  #secDist{order:-1}
+  #telem,#telem:empty{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em} /* reserve the line so the header never changes height */
+}
+@media(max-width:700px){
+  /* app shell: header and the top of the recorder stay put; only the panel below the chart scrolls */
+  html,body{height:100%;overflow:hidden}
+  body{display:flex;flex-direction:column;height:100dvh}
+  #tip{display:block;flex:none}
+  header{display:flex;flex-wrap:wrap;gap:8px 10px;padding:8px 16px;flex:none}
+  .brand,#restart{display:none} /* the explainer names the page; Start turns into Replay at 18:00 */
+  .readout{flex:1 0 100%;justify-content:space-between;gap:12px}
+  #clock{font-size:24px}
+  .harmony{width:auto;flex:1}
+  .transport,.sound{gap:6px;flex:none}
+  #secView{order:-1}
+  #vol{width:64px!important}
+  main{display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+  main>*{flex:none}
+  #stage{position:sticky;top:0;z-index:1;height:58%;border-bottom:1px solid var(--rule)}
+  #evcard{height:auto;border-top:0}#evwrap{max-height:40svh}
+}
+
+dialog{max-width:540px;width:calc(100% - 32px);background:var(--ground);color:var(--ink);border:1px solid var(--rule);border-radius:6px;padding:26px 28px}
+dialog::backdrop{background:rgba(10,16,21,.72)}
+dialog h2{font:600 24px/1.2 var(--label);margin:0 0 12px}
+dialog p,dialog li{color:var(--ink-2);max-width:62ch}dialog p{margin:0 0 12px}dialog ul{margin:0 0 14px;padding-left:20px}dialog li{margin-bottom:6px}
+dialog b{color:var(--ink);font-weight:600}
+dialog .row{justify-content:flex-end;margin-top:18px;gap:8px}
+#introSound{background:var(--lamp);color:var(--ground);border-color:var(--lamp)}
+.pulse{animation:pulse 1.2s ease-in-out 4}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(242,213,138,.3)}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}#harmBar{transition:none}}
 </style>
 </head>
 <body>
+<div id="tip" role="region" aria-label="About this page">
+  <p><b>Factory pulse</b> turns a simulated factory day into sound and a chart recorder. Harmonious music means it's running fine; discordant means something's off.</p>
+  <p>Each coloured thread is one measurement (wider means more, newest at the top); red dots are alarms. Tap the chart to read a moment. Then break something with the buttons under the chart and listen. Headphones help.</p>
+  <div class="row"><button id="tipClose">Got it</button><button id="tipSound">Turn sound on</button></div>
+</div>
 <header>
-  <button id="play">▶ Start</button>
-  <button id="restart" title="Re-run the day with the same seed and injected events">↺ Replay day</button>
-  <label>Speed <select id="speed"><option>1</option><option>10</option><option selected>60</option><option>300</option></select>×</label>
-  <label>Bin <select id="bin"><option>1</option><option selected>3</option><option>5</option><option>15</option></select>min</label>
-  <button id="audioBtn">🔈 Enable sound</button>
-  <label>Vol <input type="range" id="vol" min="0" max="1" step="0.01" value="0.6" style="width:80px"></label>
-  <a href="spiral.html">Spiral view →</a>
+  <div class="brand">Factory pulse<small>Simulated day, 08:00 to 18:00</small></div>
+  <div class="readout">
+    <div id="clock">08:00</div>
+    <div class="harmony"><div id="harm">Flow harmony 1.00 · smooth <button id="harmHelp" popovertarget="harmInfo" aria-label="What is flow harmony?">?</button></div><div class="meter"><div id="harmBar"></div></div><div id="telem"></div></div>
+  </div>
+  <div class="transport">
+    <button id="play">▶ Start</button>
+    <button id="restart" title="Re-run the day with the same seed and changes">↺ Replay day</button>
+    <label id="speedLab">Speed <select id="speed"><option value="1">×1</option><option value="10">×10</option><option value="60">×60</option><option value="300" selected>×300</option></select></label>
+    <label id="binLab">Resolution <select id="bin"><option value="1">1 min</option><option value="3" selected>3 min</option><option value="5">5 min</option><option value="15">15 min</option></select></label>
+  </div>
+  <div class="sound">
+    <button id="audioBtn">Turn sound on</button>
+    <input type="range" id="vol" min="0" max="1" step="0.01" value="0.6" style="width:84px" aria-label="Volume">
+  </div>
 </header>
 <main>
-  <div class="card" id="evcard">
-    <h3>Events <label><input type="checkbox" id="alarmsOnly">alarms only</label></h3>
+  <div id="evcard">
+    <div class="colhead"><h2>Event log</h2><button id="logResume" hidden></button><label><input type="checkbox" id="alarmsOnly">Alarms only</label></div>
     <div id="evwrap"><table><tbody id="events"></tbody></table></div>
   </div>
-  <div id="stage"><canvas id="mud"></canvas></div>
+  <div id="stage"><canvas id="mud" aria-label="Five measurement threads over time, newest at top"></canvas>
+    <div id="key" aria-hidden="true">Wider = more · dashed = no data · <b>●</b> alarm · tap or drag to read</div>
+    <div id="summary" hidden><h2>Day complete</h2><div id="sumText"></div>
+      <div class="row"><button id="sumClose">Close</button><button id="sumReplay">Replay with a disruption</button></div></div>
+  </div>
   <aside>
-    <div class="card"><h3>Status</h3><div id="clock">08:00</div><div id="harm" style="font-size:12px;color:var(--mute)"></div><div id="telem"></div><ol id="log"></ol></div>
-    <div class="card"><h3>Inject</h3>
+    <section id="secDist">
+      <div class="colhead"><h2>Cause a disruption</h2></div>
+      <p class="hint">Break something, then watch the threads and listen for the music turning discordant.</p>
       <div class="row">
-        <button data-a="stop">Stoppage 10m</button><button data-a="qa">QA reject spike</button>
-        <button data-a="truck">Delay pickup 30m</button><button data-a="drop">Drop telemetry</button><select id="dropKey"></select>
+        <button data-a="stop">Stop lines 10 min</button><button data-a="qa">QA reject spike</button>
+        <button data-a="truck">Delay pickup 30 min</button>
       </div>
-    </div>
-    <div class="card"><h3>Rates <label><input type="checkbox" id="homeo" checked>homeostasis</label></h3><div id="rates"></div></div>
-    <div class="card"><h3>Inspect <button id="live">Live</button></h3>
+      <h3 class="sub" id="feedHead">Cut a sensor feed for 10 min</h3>
+      <p class="hint">The factory keeps running; you just stop seeing and hearing that measurement. Its thread turns dashed and its sound goes quiet. Can you tell missing data from a real zero?</p>
+      <div class="row" role="group" aria-labelledby="feedHead">
+        <button data-a="drop" data-k="materialsIn" class="feed">Materials in</button><button data-a="drop" data-k="produced" class="feed">Produced</button>
+        <button data-a="drop" data-k="qaInspected" class="feed">QA inspected</button><button data-a="drop" data-k="qaRejected" class="feed">QA rejected</button>
+        <button data-a="drop" data-k="warehouse" class="feed">Warehouse stock</button><button data-a="drop" data-k="trucksWaiting" class="feed">Trucks waiting</button>
+      </div>
+      <ol id="log"></ol>
+    </section>
+    <section id="secView" hidden><div class="colhead"><h2>Playback</h2></div><div class="row" id="viewCtl"></div></section>
+    <section>
+      <div class="colhead"><h2>Selected slice</h2><button id="live">Follow live</button></div>
       <table id="vals"></table>
-      <button id="replaySel" style="margin-top:6px">▶ Replay sound from here (15 min in 15 s)</button>
-    </div>
-    <small>Newest at top, history flows down; all threads share one time grid. Width = measured value on a fixed linear scale (rates: per-minute average over the bin; stocks: max in bin). Hairline = measured zero; dashed = telemetry missing. Red dots = alarm events counted in the bin (QA thread: rejects). Thread colour is identity only.</small>
+      <button id="replaySel">▶ Hear 15 min from here</button>
+    </section>
+    <section>
+      <div class="colhead"><h2>Event rates</h2><label><input type="checkbox" id="homeo" checked>Homeostasis</label></div>
+      <div id="rates"></div>
+    </section>
+    <section>
+      <div class="colhead"><h2>Sound mix</h2><button id="mixReset">Reset</button></div>
+      <div id="mix"></div>
+    </section>
+    <p class="note">Width is the measured value on a fixed scale: rates are per-minute averages, stocks the maximum in each bin. A hairline is a measured zero; a dashed line means no data. Red dots count alarm events. Colour only identifies the thread.</p>
+    <p class="credit"><a href="spiral.html">Spiral view</a> · Vibe coded by <a href="https://x.com/truekonrads" target="_blank" rel="noopener">@truekonrads</a></p>
   </aside>
 </main>
 <dialog id="intro">
   <h2>Hear and see how the factory is running</h2>
   <p>This is a simulated factory day: materials arrive, three assembly lines build products, QA inspects them, and trucks collect them from the warehouse.</p>
-  <p>Rather than reading numbers, let your built-in pattern recognition do the work. After a while you'll learn what a normal day looks and sounds like, and notice when something changes.</p>
+  <p>Rather than reading numbers, let your own pattern recognition do the work. After a while you'll know what a normal day looks and sounds like, and notice when something changes.</p>
   <ul>
-    <li><b>Listen:</b> roughly harmonious, flowing music means things are fine. Discordant, off-key or off-beat sound means something isn't quite right.</li>
-    <li><b>Look:</b> each coloured thread is one measurement; wider means more. Newest is at the top. Red dots are alarms.</li>
-    <li><b>Explore:</b> inject faults or change rates on the right, and toggle homeostasis to see whether the factory recovers on its own.</li>
+    <li><b>Listen.</b> Roughly harmonious, flowing music means things are fine. Discordant, off-key or off-beat sound means something isn't quite right.</li>
+    <li><b>Look.</b> Each coloured thread is one measurement; wider means more. Newest is at the top. Red dots are alarms.</li>
+    <li><b>Read the harmony.</b> <i>Flow harmony</i> in the top bar sums it up: 1.00 means everything flows, and it falls as lines run short of materials, trucks queue up or QA rejects rise.</li>
+    <li><b>Break things.</b> Use <i>Cause a disruption</i> on the right, change event rates, and switch homeostasis off to see whether the factory recovers on its own.</li>
   </ul>
-  <p>Sound is off until you turn it on with <b>🔈 Enable sound</b> in the top bar. Headphones or speakers help; the sound is panned left to right along the flow.</p>
-  <div class="row"><button id="introSound">🔈 Enable sound &amp; start</button><button id="introClose">Close</button></div>
+  <p>Sound stays off until you choose <b>Turn sound on</b> in the top bar. Headphones help: the sound pans left to right along the flow.</p>
+  <div class="row"><button id="introClose">Close</button><button id="introSound">Turn sound on and start</button></div>
 </dialog>
+<div id="harmInfo" popover>
+  <p><b>Flow harmony</b> is a single score for how well the factory is flowing, from <b>1.00</b> (everything moving) down to <b>0.00</b> (badly stuck).</p>
+  <p>It falls when lines run short of materials, trucks queue in the yard, QA rejects rise or a line stops. It recovers gradually, so a dip lingers for a few minutes after the cause has passed.</p>
+  <p>The word gives the band: <b>smooth</b> at 0.75 and above, <b>strained</b> from 0.45, <b>struggling</b> below that. The music follows it: the lower the score, the more off-key and off-beat it sounds.</p>
+</div>
+<div id="toast" role="status" hidden></div>
 <script src="core.js"></script>
 <script>
 const TH=[ // fixed calibration per thread; alarm counts come from sample.alarms[k]
-  {k:"materialsIn",lab:"Materials",u:"units/min",max:40,rate:1,c:'#2ee6b0'},
-  {k:'produced',lab:'Production',u:'units/min',max:16,rate:1,c:'#4a86ff'},
-  {k:'qaInspected',lab:'QA',u:'inspected/min',max:16,rate:1,c:'#4fd16e'},
-  {k:'warehouse',lab:'Warehouse',u:'stock units',max:400,rate:0,c:'#ffb020'},
-  {k:'trucksWaiting',lab:'Logistics',u:'trucks parked',max:12,rate:0,c:'#a46bff'}];
+  {k:"materialsIn",lab:"Materials",u:"units/min",max:40,rate:1,c:'#5EC4B6'},
+  {k:'produced',lab:'Production',u:'units/min',max:16,rate:1,c:'#7E9CF0'},
+  {k:'qaInspected',lab:'QA',u:'inspected/min',max:16,rate:1,c:'#9CCB6B'},
+  {k:'warehouse',lab:'Warehouse',u:'stock units',max:400,rate:0,c:'#E3A84B'},
+  {k:'trucksWaiting',lab:'Logistics',u:'trucks parked',max:12,rate:0,c:'#B48BD6'}];
 let binMin=3,curBins=[],selMin=null,geo,hlKey='';
 
 function bins(){
@@ -122,16 +273,23 @@ function draw(){
   if(c.width!==Math.round(W*dpr)||c.height!==Math.round(H*dpr)){c.width=Math.round(W*dpr);c.height=Math.round(H*dpr)}
   const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
   curBins=bins();
-  const nb=curBins.length,top=44,gut=44,rowH=(H-top-8)/(DAY/binMin),colW=(W-gut)/TH.length,Y=i=>top+(nb-1-i+.5)*rowH;
+  // phones keep rows readable (>=4px) and let the oldest hours fall off the bottom
+  const nb=curBins.length,top=64,gut=50,rowH=Math.max((H-top-8)/(DAY/binMin),W<500?4:0),colW=(W-gut)/TH.length,Y=i=>top+(nb-1-i+.5)*rowH;
   geo={top,rowH,nb};
+  const sb=selMin==null?null:curBins[Math.floor(selMin/binMin)],rb=sb||curBins[nb-1]; // rb: the bin read out under the column labels
   g.textAlign='center';g.textBaseline='alphabetic';
-  TH.forEach((t,j)=>{const x=gut+colW*(j+.5);g.fillStyle=t.c;g.font='600 12px system-ui';g.fillText(t.lab,x,16);g.fillStyle='#7c8a90';g.font='10px system-ui';g.fillText(t.u,x,30)});
-  g.textAlign='right';g.textBaseline='middle';g.strokeStyle='#232c33';g.setLineDash([3,4]);
-  for(let h=0;h<=10;h++){const ih=h*60/binMin;if(ih>nb)break;const y=top+(nb-ih)*rowH;
-    g.beginPath();g.moveTo(gut,y);g.lineTo(W,y);g.stroke();g.fillStyle='#7c8a90';g.fillText(hhmm(h*60),gut-6,y)}
-  g.setLineDash([]);
-  const sb=selMin==null?null:curBins[Math.floor(selMin/binMin)];
-  if(sb){g.fillStyle='rgba(243,210,122,.12)';g.fillRect(gut,Y(sb.i)-Math.max(rowH,2)/2,W-gut,Math.max(rowH,2))}
+  const F='"Barlow Semi Condensed",Barlow,system-ui';
+  TH.forEach((t,j)=>{const x=gut+colW*(j+.5);g.fillStyle=t.c;g.font='600 14px '+F;g.fillText(t.lab,x,18);g.fillStyle='#82939A';g.font='400 12px '+F;g.fillText(t.u,x,33);
+    if(!rb)return;const v=rb.ok[t.k]?(t.rate?rb.v[t.k].toFixed(1):String(rb.v[t.k])):'no data',a=rb.al[t.k]?' ●'+rb.al[t.k]:'';
+    g.font='500 14px '+F;const wv=g.measureText(v).width,wa=g.measureText(a).width;
+    g.textAlign='left';g.fillStyle='#E4E8E3';g.fillText(v,x-(wv+wa)/2,51);g.fillStyle='#F0605D';g.fillText(a,x-(wv+wa)/2+wv,51);g.textAlign='center'});
+  if(rb){g.textAlign='left';g.fillStyle=sb?'#F2D58A':'#82939A';g.font='500 12px '+F;g.fillText(sb?hhmm(sb.m):'Live',8,51)}
+  if(!nb){g.textAlign='center';g.fillStyle='#82939A';g.font='500 15px '+F;g.fillText('Press ▶ Start to run the day',gut+(W-gut)/2,top+60)}
+  g.textAlign='right';g.textBaseline='middle';g.lineWidth=1;
+  for(let q=0;q<=60;q++){const iq=q*10/binMin;if(iq>nb)break;const y=Math.round(top+(nb-iq)*rowH)+.5,hr=q%6===0; // recorder grid: 10-min ticks, hour rules
+    g.strokeStyle=hr?'#2E414E':'#21303B';g.beginPath();g.moveTo(gut,y);g.lineTo(W,y);g.stroke();
+    if(hr){g.fillStyle='#82939A';g.font='400 12px '+F;g.fillText(hhmm(q*10),gut-8,y)}}
+  if(sb){g.fillStyle='rgba(242,213,138,.16)';g.fillRect(gut,Y(sb.i)-Math.max(rowH,2)/2,W-gut,Math.max(rowH,2))}
   const marks=[];
   TH.forEach((t,j)=>{
     const cx=gut+colW*(j+.5),hw=b=>Math.max(.75,colW*.44*Math.min(1,b.v[t.k]/t.max));
@@ -139,7 +297,7 @@ function draw(){
     const flush=()=>{if(!seg.length)return;
       const p=seg.map(b=>[Y(b.i),hw(b)]);p.unshift([p[0][0]+rowH/2,p[0][1]]);p.push([p[p.length-1][0]-rowH/2,p[p.length-1][1]]);
       g.beginPath();p.forEach(([y,w],n)=>n?g.lineTo(cx+w,y):g.moveTo(cx+w,y));for(let n=p.length-1;n>=0;n--)g.lineTo(cx-p[n][1],p[n][0]);
-      g.closePath();g.fillStyle=t.c;g.shadowColor=t.c;g.shadowBlur=8;g.fill();g.shadowBlur=0;seg=[]};
+      g.closePath();g.fillStyle=t.c;g.shadowColor=t.c;g.shadowBlur=5;g.fill();g.shadowBlur=0;seg=[]};
     curBins.forEach(b=>{
       if(b.ok[t.k])seg.push(b);
       else{flush();g.strokeStyle=t.c;g.setLineDash([2,3]);g.beginPath();g.moveTo(cx,Y(b.i)+rowH/2);g.lineTo(cx,Y(b.i)-rowH/2);g.stroke();g.setLineDash([])}
@@ -147,19 +305,40 @@ function draw(){
     });
     flush();
   });
-  marks.forEach(([x,y,n])=>{g.beginPath();g.arc(x,y,Math.min(7,2.5+1.5*Math.sqrt(n)),0,7);g.fillStyle='#ff4d5e';g.fill();g.strokeStyle='#fff';g.lineWidth=1;g.stroke()});
-  inspect(sb||curBins[nb-1]);
+  marks.forEach(([x,y,n])=>{g.beginPath();g.arc(x,y,Math.min(7,2.5+1.5*Math.sqrt(n)),0,7);g.fillStyle='#F0605D';g.fill();g.strokeStyle='#1B2832';g.lineWidth=1.5;g.stroke()});
+  $('harmBar').style.width=(harmony*100).toFixed(0)+'%';
+  inspect(rb);
+  $('feedHead').textContent=`Cut a sensor feed for ${dropLen()} min`+(speed>60?` (about 10 s at ×${speed})`:'');
+  if(selMin!=null&&selMin>=mins.length){selMin=null;hlKey=''} // a replay wiped the selected moment
+  logHold=selMin!=null; // inspecting a moment freezes the log so rows don't scroll away
+  const waiting=evts.length-evShown;$('logResume').hidden=!logHold;
+  $('logResume').textContent=waiting?`Paused · ${waiting} new · resume`:'Paused · resume';
+  document.querySelectorAll('button.feed').forEach(b=>{ // show which feeds are cut and for how long
+    b.dataset.lab??=b.textContent;const m=mins.length,x=anoms.find(a=>a.type==='drop'&&a.key===b.dataset.k&&m<a.s+lenOf(a)&&m>=a.s-1);
+    b.classList.toggle('on',!!x);b.textContent=x?`${b.dataset.lab} · off ${Math.min(lenOf(x),x.s+lenOf(x)-m)} min`:b.dataset.lab;b.setAttribute('aria-pressed',!!x)});
+  if(mins.length>=DAY){if($('summary').hidden&&!sumDone){sumDone=true;summary()}}else{sumDone=false;$('summary').hidden=true}
+}
+let sumDone=false;
+function summary(){ // end-of-day recap from the recorded minutes and events
+  let h=1,lo=1,loM=0,built=0,rej=0;
+  mins.forEach(s=>{h+=.25*(1-strainOf(s)-h);if(h<lo){lo=h;loM=s.m}built+=s.produced;rej+=s.qaRejected});
+  const n=re=>evts.filter(e=>re.test(e.txt)).length,alarms=evts.filter(e=>e.alarm).length;
+  $('sumText').innerHTML=`<p>Built <b>${built.toLocaleString()}</b> units, shipped <b>${n(/departed full/)}</b> trucks, rejected ${rej} in QA.</p>
+    <p><b>${alarms}</b> alarms, including ${n(/jam/)} line jams.</p>
+    <p>Harmony bottomed out at <b>${lo.toFixed(2)}</b> (${mood(lo)}) around ${hhmm(loM)}.</p>`;
+  $('summary').hidden=false;
 }
 function inspect(b){
   if(!b){$('vals').innerHTML='<tr><td>No data yet</td></tr>';return}
   const f=(t,v)=>t.rate?v.toFixed(1):v;
-  $('vals').innerHTML=`<tr><td colspan=3>${hhmm(b.m)}–${hhmm(b.m+binMin)} ${selMin==null?'(latest)':''}</td></tr><tr><td></td><td><small>value</small></td><td><small>alarms</small></td></tr>`+
-    TH.map(t=>`<tr><td style="color:${t.c}">${t.lab}</td><td>${b.ok[t.k]?f(t,b.v[t.k]):'— no data'}</td><td>${b.al[t.k]||''}</td></tr>`).join('')+
-    `<tr><td><small>Lines 1/2/3 (units)</small></td><td colspan=2>${b.ok.produced?b.lines.join(' / '):'—'}</td></tr>`;
+  $('vals').innerHTML=`<tr><td colspan=3 class="when">${hhmm(b.m)}–${hhmm(b.m+binMin)}${selMin==null?', latest':''}</td></tr>`+
+    TH.map(t=>`<tr><td><span class="sw" style="background:${t.c}"></span>${t.lab}</td><td>${b.ok[t.k]?f(t,b.v[t.k]):'no data'}</td><td class="al">${b.al[t.k]?'● '+b.al[t.k]:''}</td></tr>`).join('')+
+    `<tr><td class="sub">Lines 1 / 2 / 3</td><td colspan=2>${b.ok.produced?b.lines.join(' / '):'no data'}</td></tr>`;
   const key=selMin==null?'':b.m+'/'+binMin+'/'+evts.length;
   if(key!==hlKey){hlKey=key;let first=null; // highlight grid rows inside the selected bin
     document.querySelectorAll('#events tr').forEach(tr=>{const m=+tr.dataset.m,on=selMin!=null&&m>=b.m&&m<b.m+binMin;tr.classList.toggle('sel',on);if(on&&!first)first=tr});
-    if(first)first.scrollIntoView({block:'nearest'})}
+    if(first&&first.offsetParent){const w=$('evwrap'),r=first.getBoundingClientRect(),q=w.getBoundingClientRect(); // scroll the log only, never the page
+      if(r.top<q.top||r.bottom>q.bottom)w.scrollTop+=r.top-q.top-8}}
 }
 function pick(e){
   if(!geo||!geo.nb)return;const r=$('mud').getBoundingClientRect();
@@ -170,14 +349,33 @@ let dragging=false;
 $('mud').onpointerdown=e=>{dragging=true;$('mud').setPointerCapture(e.pointerId);pick(e)};
 $('mud').onpointermove=e=>{if(dragging)pick(e)};
 $('mud').onpointerup=()=>dragging=false;
-$('live').onclick=()=>{selMin=null;dirty=true};
+$('live').onclick=$('logResume').onclick=()=>{selMin=null;dirty=true};
 $('bin').onchange=e=>{binMin=+e.target.value;dirty=true};
 $('alarmsOnly').onchange=e=>$('events').classList.toggle('ao',e.target.checked);
 $('events').onclick=e=>{const tr=e.target.closest('tr');if(tr){selMin=+tr.dataset.m;dirty=true}};
 new ResizeObserver(()=>dirty=true).observe($('stage'));
-$('introClose').onclick=()=>{$('intro').close();$('audioBtn').classList.add('pulse')};
-$('introSound').onclick=()=>{$('intro').close();if(!audioOn)$('audioBtn').onclick();if(!playing)$('play').onclick()};
-$('intro').showModal();
+$('introClose').onclick=()=>{$('intro').close();if(!playing)$('play').onclick();$('audioBtn').classList.add('pulse');$('audioBtn').focus()};
+$('introSound').onclick=()=>{$('intro').close();startWithSound()};
+const startWithSound=()=>{if(!audioOn)$('audioBtn').onclick();if(!playing)$('play').onclick()};
+const dismissTip=()=>{$('tip').hidden=true;try{localStorage.setItem('soundscape-tip','1')}catch(e){}};
+try{if(localStorage.getItem('soundscape-tip'))$('tip').hidden=true}catch(e){}
+$('tipClose').onclick=dismissTip;
+$('tipSound').onclick=()=>{dismissTip();startWithSound()};
+$('sumClose').onclick=()=>$('summary').hidden=true;
+$('sumReplay').onclick=()=>{$('restart').onclick();$('summary').hidden=true;
+  $('secDist').scrollIntoView({block:'nearest',behavior:'smooth'});
+  document.querySelectorAll('#secDist button').forEach(b=>{b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse')})};
+// iPhones mute Web Audio when the silent switch is on, which looks like a broken page
+const iOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let toastT;const toast=t=>{$('toast').textContent=t;$('toast').hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>$('toast').hidden=true,6000)};
+const audioToggle=$('audioBtn').onclick;
+$('audioBtn').onclick=async()=>{await audioToggle();if(audioOn&&iOS)toast('No sound? Check that the silent switch is off.')};
+// phones: Speed and Resolution move out of the header into a Playback panel under the chart
+const narrow=matchMedia('(max-width:700px)');
+const placeControls=()=>{(narrow.matches?$('viewCtl'):document.querySelector('.transport')).append($('speedLab'),$('binLab'));$('secView').hidden=!narrow.matches};
+narrow.addEventListener('change',placeControls);placeControls();
+if(narrow.matches)$('play').onclick(); // start silently so the chart isn't empty; sound stays opt-in
+else $('intro').showModal(); // phones get the inline explainer instead
 </script>
 </body>
 </html>

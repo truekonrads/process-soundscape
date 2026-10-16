@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#16212A"/>
+  <!-- five measurement threads, bulging like a waveform -->
+  <path d="M12 18C16.5 26 16.5 38 12 46C7.5 38 7.5 26 12 18Z" fill="#5EC4B6"/>
+  <path d="M22 11C28 22 28 42 22 53C16 42 16 22 22 11Z" fill="#7E9CF0"/>
+  <path d="M32 7C39 20 39 44 32 57C25 44 25 20 32 7Z" fill="#9CCB6B"/>
+  <path d="M42 14C47.5 24 47.5 40 42 50C36.5 40 36.5 24 42 14Z" fill="#E3A84B"/>
+  <path d="M52 22C55.5 28 55.5 36 52 42C48.5 36 48.5 28 52 22Z" fill="#B48BD6"/>
+</svg>
